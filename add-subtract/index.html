@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>add/remove words</title>
+    <title>add/subtract</title>
     <script type="text/javascript">
 
         var textField;
@@ -47,7 +47,7 @@
                         removeCounts[i]++;
                         currentText.splice(currentText.indexOf(textToRemove[i]), 1);
                     }
-                    alertString += removeCounts[i] + " \"" + textToRemove[i] + "\" removed\n";
+                    alertString += removeCounts[i] + " \"" + textToRemove[i] + "\" subtracted\n";
                     // for (var j = 0; j < currentText.length; j++) {
                     //     if (currentText[j] == textToRemove[i]) {
 
@@ -71,7 +71,7 @@
     <input type="text" id="textField" placeholder="Words go here">
     <br>
     <input type="submit" id="addButton" value="Add">
-    <input type="submit" id="removeButton" value="Remove">
+    <input type="submit" id="removeButton" value="Subtract">
     <br>
     <br>
 
