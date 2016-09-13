@@ -1,0 +1,81 @@
+<html>
+<head>
+    <title>add/remove words</title>
+    <script type="text/javascript">
+
+        var textField;
+        var addButton;
+        var removeButton;
+        var textDiv;
+
+        function whenPageLoads() {
+            textField = document.getElementById('textField');
+            addButton = document.getElementById('addButton');
+            removeButton = document.getElementById('removeButton');
+            textDiv = document.getElementById('text');
+
+            addButton.addEventListener('click', addText);
+            removeButton.addEventListener('click', removeText);
+
+            document.getElementById('textField').focus();
+
+        }
+
+        function addText() {
+            var textToAdd = document.getElementById('textField').value.toLowerCase().replace(/\s+/g, ' ').split(' ');
+
+            var currentText = document.getElementById('text').textContent.split(' ');
+
+            currentText = currentText.concat(textToAdd);
+            textDiv.innerHTML = currentText.join(' ');
+            document.getElementById('textField').value = '';
+            document.getElementById('textField').focus();
+        }
+
+        function removeText() {
+            var textToRemove = document.getElementById('textField').value.toLowerCase().split(' ');
+            // console.log(textToRemove);
+            var currentText = document.getElementById('text').textContent.toLowerCase().split(' ');
+            if (currentText == '') {
+                alert("You must add something before you can remove.");
+            } else {
+                var removeCounts = [];
+                var alertString = "";
+                for (var i = 0; i < textToRemove.length; i++) {
+                    removeCounts[i] = 0;
+                    while (currentText.indexOf(textToRemove[i]) != -1) {
+                        removeCounts[i]++;
+                        currentText.splice(currentText.indexOf(textToRemove[i]), 1);
+                    }
+                    alertString += removeCounts[i] + " \"" + textToRemove[i] + "\" removed\n";
+                    // for (var j = 0; j < currentText.length; j++) {
+                    //     if (currentText[j] == textToRemove[i]) {
+
+                    //     }
+                    // }
+                }
+                alert(alertString);
+                textDiv.innerHTML = currentText.join(' ');                
+            }
+            document.getElementById('textField').value = '';
+            document.getElementById('textField').focus();
+        }
+
+        window.addEventListener('load', whenPageLoads);
+
+
+    </script>
+</head>
+<body>
+
+    <input type="text" id="textField" placeholder="Words go here">
+    <br>
+    <input type="submit" id="addButton" value="Add">
+    <input type="submit" id="removeButton" value="Remove">
+    <br>
+    <br>
+
+    <div id="text"></div>
+
+</body>
+</html>
