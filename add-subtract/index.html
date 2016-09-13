@@ -23,12 +23,12 @@
 
         function addText() {
             var textToAdd = document.getElementById('textField').value.toLowerCase().replace(/\s+/g, ' ').split(' ');
-
             var currentText = document.getElementById('text').textContent.split(' ');
-
-            currentText = currentText.concat(textToAdd);
-            textDiv.innerHTML = currentText.join(' ');
-            document.getElementById('textField').value = '';
+            if (textToAdd != '') {
+                currentText = currentText.concat(textToAdd);
+                textDiv.innerHTML = currentText.join(' ');
+                document.getElementById('textField').value = '';
+            }
             document.getElementById('textField').focus();
         }
 
