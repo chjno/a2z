@@ -1,0 +1,193 @@
+<html>
+<head>
+    <title>me sound smart</title>
+    <style>
+        span.smart {
+            color: blue;
+        }
+        span {
+            margin-right: 4px;
+            float: left;
+        }
+    </style>
+    <script src="libs/rita-full.min.js" type="text/javascript"></script>
+    <script src="libs/jquery-3.1.0.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+
+        var penn = {
+            "cc": "Coordinating conjunction",
+            // "cd": "Cardinal number",
+            // "dt": "Determiner",
+            // "ex": "Existential there",
+            // "fw": "Foreign word",
+            "in": "Preposition or subordinating conjunction",
+            "jj": "Adjective",
+            "jjr": "Adjective, comparative",
+            "jjs": "Adjective, superlative",
+            // "ls": "List item marker",
+            // "md": "Modal",
+            "nn": "Noun, singular or mass",
+            "nns": "Noun, plural",
+            "nnp": "Proper noun, singular",
+            "nnps": "Proper noun, plural",
+            "pdt": "Predeterminer",
+            // "pos": "Possessive ending",
+            "prp": "Personal pronoun",
+            "prp$": "Possessive pronoun",
+            "rb": "Adverb",
+            "rbr": "Adverb, comparative",
+            "rbs": "Adverb, superlative",
+            // "rp": "Particle",
+            // "sym": "Symbol",
+            // "to": "to",
+            // "uh": "Interjection",
+            "vb": "Verb, base form",
+            "vbd": "Verb, past tense",
+            "vbg": "Verb, gerund or present participle",
+            "vbn": "Verb, past participle",
+            "vbp": "Verb, non-3rd person singular present",
+            "vbz": "Verb, 3rd person singular present",
+            // "wdt": "Wh-determiner",
+            // "wp": "Wh-pronoun",
+            // "wp$": "Possessive wh-pronoun",
+            // "wrb": "Wh-adverb"
+        }
+
+        var options = {
+            'Conjunctions': ['cc','in'],
+            'Adjectives': ['jj','jjr','jjs'],
+            'Nouns': ['nn','nns','nnp','nnps'],
+            // 'Predeterminers': ['pdt'],
+            'Pronouns': ['prp','prp$'],
+            'Adverbs': ['rb','rbr','rbs'],
+            // 'Interjections': ['uh'],
+            'Verbs': ['vb','vbd','vbg','vbn','vbp','vbz']
+        }
+
+        var onTags = [];
+
+        function loadJSON(callback) {   
+            var xobj = new XMLHttpRequest();
+                xobj.overrideMimeType("application/json");
+            xobj.open('GET', 'creds.json', true);
+            xobj.onreadystatechange = function () {
+                  if (xobj.readyState == 4 && xobj.status == "200") {
+                    callback(xobj.responseText);
+                  }
+            };
+            xobj.send(null);  
+         }
+
+        var textBox;
+        var text;
+        var submit;
+        var original;
+
+        function whenPageLoads() {
+            for (var property in options) {
+                if (options.hasOwnProperty(property)) {
+                    $(document.body).prepend('<label><input type="checkbox" id=' + property + '>' + property + '</label><br>');
+                }
+            }
+            $(document.body).prepend('<p>In which ways would you like to sound smarter?</p>');
+            $(document.body).prepend('<h2>Me Sound Smart takes your text and makes you sound smarter.</h2>');
+            textBox = document.getElementById('textBox');
+            submit = document.getElementById('button');
+            original = document.getElementById('original');
+            text = document.getElementById('text')
+            submit.addEventListener('click', smartify);
+            document.getElementById('textBox').focus();
+        }
+
+        function getData(request, url, word, smartText, index) {
+            request.addEventListener('load', function() {
+                console.log(this.responseText);
+                try {
+                    syns = JSON.parse(this.responseText)[0].words;
+                    smartText[index] = syns.sort(function (a, b) { return b.length - a.length; })[0];
+                }
+                catch (e) {
+                    smartText[index] = word;
+                }
+            });
+            request.open('GET', url);
+            request.send();
+        }
+
+        function smartify() {
+            document.getElementById('textBox').focus();   
+            // original.innerHTML = document.getElementById('textBox').value;
+            var dumbText = document.getElementById('textBox').value.replace(/\s+/g, ' ').split(' ');
+            console.log(dumbText);
+
+
+            console.log(RiTa.getPosTags(dumbText));
+            var dumbTags = RiTa.getPosTags(dumbText);
+
+            text.innerHTML = 'Optimizing smart...';
+
+            loadJSON(function(response) {
+                text.innerHTML = '';
+                var key = JSON.parse(response).wordnikKey;
+                var smartText = [];
+                for (var i = 0; i < dumbText.length; i++) {
+                    if (dumbText[i] != '') {
+                        // if (dumbTags[i] == 'nn' || 'vbn') {
+                        if (onTags.indexOf(dumbTags[i]) != -1) {
+                            var url = 'http://api.wordnik.com:80/v4/word.json/' + dumbText[i] + '/relatedWords?useCanonical=false&relationshipTypes=synonym&limitPerRelationshipType=30&api_key=' + key;
+                            var oReq = new XMLHttpRequest();
+                            getData(oReq, url, dumbText[i], smartText, i);
+
+                            
+
+                        } else {
+                            smartText[i] = dumbText[i];
+                        }
+                        // text.innerHTML += '<span>' + dumbText[i] + '</span>';
+                    }
+                    if (i == dumbText.length - 1) {
+
+                        if (smartText[i] != dumbText[i]) {
+                            text.innerHTML += '<span class="smart">' + smartText[i] + '</span>';
+                        } else {
+                            text.innerHTML += '<span>' + dumbText[i] + '</span>';
+                        }
+                    }
+                }
+            });
+        }
+
+        $(document).on('click', 'span', function() {
+            console.log($(this).text() + ' - ' + penn[RiTa.getPosTags($(this).text())]);
+        });
+
+        $(document).on('change', 'input:checkbox',
+            function(){
+                if ($(this).is(':checked')) {
+                    for (var i = 0; i < options[this.id].length; i++) {
+                        onTags.push(options[this.id][i]);
+                    }
+                } else {
+                    for (var j = 0; j < options[this.id].length; j++) {
+                        onTags.splice(onTags.indexOf(options[this.id][j]), 1);
+                    }
+                }
+                // console.log(onTags);
+            }
+        );
+
+        window.addEventListener('load', whenPageLoads);
+
+    </script>
+</head>
+<body>
+    <br>
+    <textarea id="textBox" rows='5' cols='100' placeholder="Words go here"></textarea>
+    <input type="submit" id="button" value="submit">
+    <br>
+    <br>
+    <p id="original"></p>
+    <!-- <br> -->
+    <p id="text"></p>
+</body>
+</html>
