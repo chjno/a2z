@@ -107,7 +107,10 @@ function getData(url, dumbWord, index, smartText, spans) {
 function smartify() {
     document.getElementById('textBox').focus();   
     // original.innerHTML = document.getElementById('textBox').value;
-    var dumbText = document.getElementById('textBox').value.replace(/\s+/g, ' ').split(' ');
+    // var dumbText = document.getElementById('textBox').value.replace(/\s+/g, ' ').split(' ');
+    // console.log(dumbText);
+
+    var dumbText = document.getElementById('textBox').value.trim().match(/(?=\S*['-])([a-zA-Z'-]+)|\w+|\W/g);
     // console.log(dumbText);
 
 
@@ -115,22 +118,22 @@ function smartify() {
     var dumbTags = RiTa.getPosTags(dumbText);
     var spans = [];
 
-    text.innerHTML = 'Optimizing smart...';
+    // text.innerHTML = 'Optimizing smart...';
 
     loadJSON(function(response) {
         text.innerHTML = '';
         var key = JSON.parse(response).wordnikKey;
         var smartText = [];
         for (var i = 0; i < dumbText.length; i++) {
-            if (dumbText[i] != '') {
+            if (dumbText[i].match(/\w/)) {
                 // if (dumbTags[i] == 'nn' || 'vbn') {
                 if (onTags.indexOf(dumbTags[i]) != -1) {
                     if (syns.hasOwnProperty(dumbText[i])) {
-                        console.log(dumbText[i] + ' already in syns');
+                        // console.log(dumbText[i] + ' already in syns');
                         smartText[i] = syns[dumbText[i]][0];
                         spans[i] = "<span id=\"" + dumbText[i] + "\" class=\"smart\">" + smartText[i] + '</span>';
                     } else {
-                        console.log('looking up ' + dumbText[i]);
+                        // console.log('looking up ' + dumbText[i]);
                         var url = 'http://api.wordnik.com:80/v4/word.json/' + dumbText[i] + '/relatedWords?useCanonical=false&relationshipTypes=synonym&limitPerRelationshipType=30&api_key=' + key;
                         getData(url, dumbText[i], i, smartText, spans);
                     }
@@ -140,6 +143,9 @@ function smartify() {
                     // spans[i] = "<span id=\"" + i.toString() + "\">" + smartText[i] + '</span>';
                 }
                 // text.innerHTML += '<span>' + dumbText[i] + '</span>';
+            } else {
+                smartText[i] = dumbText[i];
+                spans[i] = "<span>" + smartText[i] + '</span>';
             }
 
 
