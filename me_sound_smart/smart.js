@@ -66,6 +66,7 @@ var textBox;
 var text;
 var submit;
 var original;
+var syns = {};
 
 function whenPageLoads() {
     for (var property in options) {
@@ -88,12 +89,14 @@ function getData(url, dumbWord, index, smartText, spans) {
     oReq.addEventListener('load', function() {
         var data = JSON.parse(this.responseText);
         if (data.length > 0) {
-            syns = JSON.parse(this.responseText)[0].words;
-            smartText[index] = syns.sort(function (a, b) { return b.length - a.length; })[0];
-            spans[index] = "<span class=\"smart\">" + smartText[index] + '</span>';
+            syns[dumbWord] = JSON.parse(this.responseText)[0].words.sort(function(a, b){return b.length - a.length;});
+            smartText[index] = syns[dumbWord][0];
+            spans[index] = "<span id=\"" + dumbWord + "\" class=\"smart\">" + smartText[index] + '</span>';
+            // spans[index] = "<span id=\"" + index.toString() + "\" class=\"smart\">" + smartText[index] + '</span>';
         } else {
             smartText[index] = dumbWord;
-            spans[index] = '<span>' + smartText[index] + '</span>';
+            spans[index] = "<span>" + smartText[index] + '</span>';
+            // spans[index] = "<span id=\"" + index.toString() + "\">" + smartText[index] + '</span>';
         }
         text.innerHTML = spans.join('');
     });
@@ -122,11 +125,19 @@ function smartify() {
             if (dumbText[i] != '') {
                 // if (dumbTags[i] == 'nn' || 'vbn') {
                 if (onTags.indexOf(dumbTags[i]) != -1) {
-                    var url = 'http://api.wordnik.com:80/v4/word.json/' + dumbText[i] + '/relatedWords?useCanonical=false&relationshipTypes=synonym&limitPerRelationshipType=30&api_key=' + key;
-                    getData(url, dumbText[i], i, smartText, spans);
+                    if (syns.hasOwnProperty(dumbText[i])) {
+                        console.log(dumbText[i] + ' already in syns');
+                        smartText[i] = syns[dumbText[i]][0];
+                        spans[i] = "<span id=\"" + dumbText[i] + "\" class=\"smart\">" + smartText[i] + '</span>';
+                    } else {
+                        console.log('looking up ' + dumbText[i]);
+                        var url = 'http://api.wordnik.com:80/v4/word.json/' + dumbText[i] + '/relatedWords?useCanonical=false&relationshipTypes=synonym&limitPerRelationshipType=30&api_key=' + key;
+                        getData(url, dumbText[i], i, smartText, spans);
+                    }
                 } else {
                     smartText[i] = dumbText[i];
-                    spans[i] = '<span>' + smartText[i] + '</span>';
+                    spans[i] = "<span>" + smartText[i] + '</span>';
+                    // spans[i] = "<span id=\"" + i.toString() + "\">" + smartText[i] + '</span>';
                 }
                 // text.innerHTML += '<span>' + dumbText[i] + '</span>';
             }
@@ -146,6 +157,15 @@ function smartify() {
 
 $(document).on('click', 'span', function() {
     // console.log($(this).text() + ' - ' + penn[RiTa.getPosTags($(this).text())]);
+    for (var k in syns) {
+        if (syns.hasOwnProperty(k)) {
+            if ($(this).text() == k) {
+                // console.log(syns[k]);
+            }
+            // smartText[]
+            // span id == spans index
+        }
+    }
 });
 
 $(document).on('change', 'input:checkbox',
