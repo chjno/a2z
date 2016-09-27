@@ -94,6 +94,7 @@ function getData(url, dumbWord, index, smartText, spans) {
             spans[index] = "<span id=\"" + dumbWord + "\" class=\"smart\">" + smartText[index] + '</span>';
             // spans[index] = "<span id=\"" + index.toString() + "\" class=\"smart\">" + smartText[index] + '</span>';
         } else {
+            syns[dumbWord] = [];
             smartText[index] = dumbWord;
             spans[index] = "<span>" + smartText[index] + '</span>';
             // spans[index] = "<span id=\"" + index.toString() + "\">" + smartText[index] + '</span>';
@@ -106,7 +107,6 @@ function getData(url, dumbWord, index, smartText, spans) {
 
 function smartify() {
     document.getElementById('textBox').focus();   
-    // original.innerHTML = document.getElementById('textBox').value;
     // var dumbText = document.getElementById('textBox').value.replace(/\s+/g, ' ').split(' ');
     // console.log(dumbText);
 
@@ -130,8 +130,13 @@ function smartify() {
                 if (onTags.indexOf(dumbTags[i]) != -1) {
                     if (syns.hasOwnProperty(dumbText[i])) {
                         // console.log(dumbText[i] + ' already in syns');
-                        smartText[i] = syns[dumbText[i]][0];
-                        spans[i] = "<span id=\"" + dumbText[i] + "\" class=\"smart\">" + smartText[i] + '</span>';
+                        if (syns[dumbText[i]].length == 0) {
+                            smartText[i] = dumbText[i];
+                            spans[i] = "<span>" + smartText[i] + '</span>';
+                        } else {
+                            smartText[i] = syns[dumbText[i]][0];
+                            spans[i] = "<span id=\"" + dumbText[i] + "\" class=\"smart\">" + smartText[i] + '</span>';
+                        }
                     } else {
                         // console.log('looking up ' + dumbText[i]);
                         var url = 'http://api.wordnik.com:80/v4/word.json/' + dumbText[i] + '/relatedWords?useCanonical=false&relationshipTypes=synonym&limitPerRelationshipType=30&api_key=' + key;
@@ -140,38 +145,38 @@ function smartify() {
                 } else {
                     smartText[i] = dumbText[i];
                     spans[i] = "<span>" + smartText[i] + '</span>';
-                    // spans[i] = "<span id=\"" + i.toString() + "\">" + smartText[i] + '</span>';
                 }
-                // text.innerHTML += '<span>' + dumbText[i] + '</span>';
             } else {
                 smartText[i] = dumbText[i];
                 spans[i] = "<span>" + smartText[i] + '</span>';
             }
-
-
-            // if (i == dumbText.length - 1) {
-            //     if (smartText[i] != dumbText[i]) {
-            //         text.innerHTML += '<span class="smart">' + smartText[i] + '</span>';
-            //     } else {
-            //         text.innerHTML += '<span>' + dumbText[i] + '</span>';
-            //     }
-            // }
         }
-        // console.log(smartText);
+        text.innerHTML = spans.join('');
     });
 }
 
 $(document).on('click', 'span', function() {
     // console.log($(this).text() + ' - ' + penn[RiTa.getPosTags($(this).text())]);
-    for (var k in syns) {
-        if (syns.hasOwnProperty(k)) {
-            if ($(this).text() == k) {
-                // console.log(syns[k]);
-            }
-            // smartText[]
-            // span id == spans index
+
+    if ($(this).attr('class') == 'smart') {
+        var thisWord = $(this).text();
+        var thisSyns = syns[$(this).attr('id')];
+        console.log(thisSyns);
+        var thisIndex = thisSyns.indexOf(thisWord);
+        if (thisIndex + 1 < thisSyns.length) {
+            $(this).text(thisSyns[thisIndex + 1]);
+        } else {
+            $(this).text(thisSyns[0]);
         }
     }
+
+    // if (syns.hasOwnProperty(k)) {
+    //     if ($(this).text() == k) {
+    //         // console.log(syns[k]);
+    //     }
+    //     // smartText[]
+    //     // span id == spans index
+    // }
 });
 
 $(document).on('change', 'input:checkbox',
@@ -186,6 +191,9 @@ $(document).on('change', 'input:checkbox',
             }
         }
         // console.log(onTags);
+        if (document.getElementById('textBox').value != '') {
+            smartify();
+        }
     }
 );
 
