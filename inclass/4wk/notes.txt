@@ -1,0 +1,17 @@
+CORS
+  access-control-allow-origin
+  jsonp
+
+grammars
+  context-free
+
+  literals - static strings
+  ??? - variable POS
+
+node
+  require == import
+
+  gitignore config.js (api keys)
+    push config-empty.js template instead
+
+
