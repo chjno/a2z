@@ -1,0 +1,44 @@
+street view
+  https://maps.googleapis.com/maps/api/streetview?size=600x400&fov=120&location=%2211249%22&heading=235&pitch=10&key=
+
+  https://maps.googleapis.com/maps/api/streetview?
+  size=600x400
+  &location=40.720032,-73.988354
+  &fov=120
+  &key=
+
+directions
+
+  https://maps.googleapis.com/maps/api/directions/json?origin=
+  &destination=
+  &key=
+
+places
+  https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants&location=39.967627,-98.042574&key=
+
+  https://maps.googleapis.com/maps/api/place/textsearch/json?
+  query=restaurants+in+Sydney
+  &key=
+
+  details
+    https://maps.googleapis.com/maps/api/place/details/json?placeid=ChIJxRcF5PIVmIcRj4H0ZqLuGWo&key=
+
+    https://maps.googleapis.com/maps/api/place/details/json?
+    placeid=
+    &key=
+
+  photos
+    https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=CoQBcwAAAPsEtOMiSFC-BBJs1bTTLQ1NnvETXxoHCiYX6FM71bTZi4YFFDiQQOgKaDFULOEy-vZcbRl0CS0jvks6bkUbW-qzzs41o9S_QYQucblEUqj7zhdF7v-XWQx-xIRVYN8MmeuUVgHm4sp1SQRqsip1nBX5FfXuLnIcTKeO2-FnAfseEhBzU-0lpomdW3SGCqMJYakwGhTiUV-UkwAMg-qLheqroYYI0yYjew&key=
+
+    https://maps.googleapis.com/maps/api/place/photo?maxwidth=400
+    &photoreference=
+    &key=
+
+
+time
+  https://maps.googleapis.com/maps/api/timezone/json?location=39.967627,-98.042574&timestamp=1476080617&key=
+
+  https://maps.googleapis.com/maps/api/timezone/json?
+  location=
+  &timestamp=
+  &key=
