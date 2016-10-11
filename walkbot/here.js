@@ -1,6 +1,6 @@
-module.exports = { coords: [ 40.1759406, -97.5758218 ],
-  location: 'Hebron, NE',
-  distance: 146074,
+module.exports = { coords: [ 40.30175, -97.67352699999999 ],
+  location: 'Carleton, NE',
+  distance: 173764,
   history: 
    [ 'ChIJt2rHs9QTmIcROzpPK3-tmZs',
      'ChIJQTMmTQLZlocRZp_0Vprq84M',
@@ -13,4 +13,10 @@ module.exports = { coords: [ 40.1759406, -97.5758218 ],
      'ChIJEU0k2y-Pl4cR-JUf-sr3knc',
      'ChIJv8IULvKal4cRuiKXPWzAhso',
      'ChIJybFw3LiRl4cR8hdJxE7gl2I',
-     'ChIJyyGsH7aRl4cRqA4iIBo8wco' ] }
+     'ChIJyyGsH7aRl4cRqA4iIBo8wco',
+     'ChIJP140wb6Rl4cRXWuAndGYUFI',
+     'ChIJqbOXpMCRl4cRkHJsS2GaK3g',
+     'ChIJoVaDjKSRl4cRvDT4nm-Dqhw',
+     'ChIJkaXA9qKRl4cRSe__FQl39bA',
+     'ChIJ0eQwCaORl4cRXL8bn4MyMrY',
+     'ChIJl52Uq4uDl4cRQWIQ5TBQNyk' ] }
