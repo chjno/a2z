@@ -139,52 +139,16 @@ var here = {
   location: 'Superior, KS',
   distance: 0,
   history: [],
-
-  // update: function(){
-  //   here.coords = there.coords;
-  //   var matches = there.route.endAddress.match(/,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/);
-  //   here.location = matches[1] + ', ' + matches[2];
-  //   here.distance += there.route.distance.value;
-  //   here.history.push(there.place.id);
-
-  //   tweet.updateProfile();
-
-  //   fs.writeFile('./origin.js', 'module.exports = ' + util.inspect(here, {depth: null}),
-  //     function(err){
-
-  //     }
-  //   );
-
-  //   there.coords = [];
-  //   there.route = {};
-  //   // there.localTime = ;
-  //   there.place = {};
-  //   there.streetView = {};
-  //   there.image = {};
-
-  //   setTimeout(there.newDest, tweet.timeout);
-  //   console.log('will tweet again in ' + tweet.timeout + ' secs');
-  // }
 };
 
 
 
 var there = {
   coords: [39.967627, -98.042574],
-  route: {
-    // endAddress: 'Webber Rd, Superior, KS 68978, USA',
-    // distance: {value: 0},
-  },
+  route: {},
   // localTime: ,
   place: {},
-  streetView: {
-    /*
-      url: '',
-      shortUrl: '',
-      localPath: '',
-      tags: {}
-    */
-  },
+  streetView: {},
   foundPhoto: false,
 
   newDest: function(){
@@ -210,8 +174,6 @@ var there = {
     there.coords = [newLat, newLong];
     console.log(there.coords);
     there.getRoute();
-    // there.getStreetView();
-    // there.getPlaces();
   },
 
   getRoute: function(){
@@ -228,18 +190,12 @@ var there = {
 
           there.route.name = data.summary;
           there.route.distance = data.legs[0].distance;
-            // text
-            // value
           there.route.duration = data.legs[0].duration;
-            // there.route.duration.text
-            // there.route.duration.value * 10000
           there.route.endAddress = data.legs[0].end_address;
-            // /,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/
           there.route.endCoords = data.legs[0].end_location;
           console.log('route: set');
 
-          // console.log(there.route);
-          // there.getStreetView();
+          // bookmark
 
           // if (tweet.first){
           //   tweet.timeout = 900000;
@@ -253,7 +209,6 @@ var there = {
 
           there.getStreetView();
           // there.getPlaces();
-
 
 
         } else {
@@ -291,20 +246,11 @@ var there = {
           there.streetView.localPath = './streetview.png';
           console.log('streetview: downloaded');
           console.log(' ');
-          // tweet('hello world', './streetview.png');
-          // tagImage(shortUrl);
           there.tagImage(there.streetView);
         }
       }
     );
   },
-
-  // getPlacePhoto: function(ref){
-  //   gmap.placesPhoto({photoreference: ref}, function(err, response){
-  //     console.log('photo: response received');
-  //     console.log(response);
-  //   })
-  // },
 
   getPlacePhoto: function(obj){
     console.log('place photo: start');
@@ -324,8 +270,6 @@ var there = {
       '&photoreference=' + obj.photos[0].photo_reference +
       '&key=' + creds.g;
 
-    // console.log(obj.url);
-
     gurl.shorten(obj.url, function(err, newUrl) {
       there.place.shortUrl = newUrl;
     });
@@ -344,9 +288,6 @@ var there = {
           there.place.localPath = './place.png';
           console.log('place photo: downloaded');
           there.tagImage(there.place)
-          // tweet('hello world', './streetview.png');
-          // tagImage(shortUrl);
-          // there.tagImage(there.streetView);
         }
       }
     );
@@ -395,7 +336,6 @@ var there = {
 
           for (var i = 0; i < data.length; i++){
             if ('photos' in data[i]){
-              // console.log(data[i].name + ' has a photo');
               if (here.history.indexOf(data[i].place_id) == -1){
                 if (!data[i].photos[0].html_attributions[0].includes(data[i].name)){
                   there.coords[0] = data[i].geometry.location.lat;
@@ -405,7 +345,7 @@ var there = {
                   there.place.id = data[i].place_id;
                   there.place.types = data[i].types;
                   there.place.vicinity = data[i].vicinity;
-                  console.log(data[i].name + ' has a unique photo!');
+                  console.log('places: found unique photo');
                   there.foundPhoto = true;
                   break;
                 }
@@ -413,17 +353,12 @@ var there = {
             }
           }
 
-          // console.log(there.place);
-
           if (there.foundPhoto){
-            // console.log('getting place photo');
-            // there.getPlacePhoto(there.place);
             there.getRoute();
           } else {
             console.log('no places w/ photos nearby');
 
-
-            // get new dest?
+            // start over
             there.newDest();
 
           }
@@ -432,7 +367,7 @@ var there = {
           console.log('no places nearby');
           console.log(' ');
 
-          // get new dest?
+          // start over
           there.newDest();
 
         }
@@ -490,7 +425,6 @@ var there = {
                 there.getPlacePhoto(there.place);
               }
             } else {
-              // console.log(obj.tags);
               tweet.updateStatus(obj.tags[0][0], obj.localPath);
             }
             console.log(' ');
@@ -514,7 +448,7 @@ var there = {
 
 
           // clarifai broken?
-          // new dest?
+          // start over
           there.newDest();
 
         }
@@ -526,251 +460,4 @@ var there = {
   }
 };
 
-// there.newDest();
-
 init();
-
-
-
-
-// var updateHere = function(location){
-//   here.coords = location.coords;
-//   /*
-//     write to file
-//       here.distance += there.route.distance.value;
-//       here
-//   */
-//   fs.writeFile('./origin.js', 'module.exports = ' + util.inspect(here),
-//     function(err){
-
-//     }
-//   );
-
-//   there.coords = [];
-//   there.route = {};
-//   there.image = {};
-// };
-
-
-
-// var getRoute = function(start, end){
-//   gmap.directions({
-//     origin: start.coords,
-//     destination: this.coords,
-//     mode: 'walking',
-//     alternatives: false
-//   }, function(err, response){
-//     if (!err){
-//       var data = response.json.routes[0];
-
-//       there.route.name = data.summary;
-//       there.route.distance = data.legs[0].distance;
-//         // text
-//         // value
-//       there.route.duration = data.legs[0].duration;
-//         // there.route.duration.text
-//         // there.route.duration.value * 10000
-//       there.route.endAddress = data.legs[0].end_address;
-//         // /,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/
-//       there.route.endCoords = data.legs[0].end_location;
-
-//       console.log(there.route);
-//       // setTimeout(tweet, there.route.duration.value * 10000);
-//     }
-//   });
-// };
-
-// there.newDest(here);
-// getRoute(here, there);
-
-
-// var tagImage = function(url){
-//   clar.models.predict(Clarifai.GENERAL_MODEL, url).then(
-//     function(response) {
-//       var data = response.data.outputs[0].data.concepts;
-
-//       var badTagCount = 0;
-//       var badTags = [
-//         "illustration",
-//         "vector",
-//         "pattern",
-//         "wallpaper",
-//         "art",
-//         "abstract",
-//         "square",
-//         "horizontal",
-//         "no person",
-//         "vertical",
-//         "simplicity",
-//         "design",
-//         "decoration",
-//         "ornate",
-//         "background",
-//         "people",
-//         "old",
-//         "shape",
-//         "graphic",
-//         "empty"
-//       ];
-
-//       var tags = [];
-//       for (var i = 0; i < data.length; i++){
-//         if (badTags.indexOf(data.name) != -1){
-//           badTagCount++;
-//         }
-//         tags[i][0] = data.name;
-//         tags[i][1] = data.value;
-//       }
-
-//       if (badTagCount > 9){
-//         console.log('no street image');
-//       } else {
-//         console.log(tags);
-//         there.image.tags = tags;
-//       }
-//     },
-//     function(err) {
-//       console.log(err);
-//     }
-//   );
-// }
-
-// var getStreetView = function(dest){
-//   // var url = 'https://maps.googleapis.com/maps/api/streetview?' +
-//   //   'size=600x400' +
-//   //   '&location=' + dest.coords.join(',') +
-//   //   '&fov=120' +
-//   //   '&key=' + creds.g;
-
-
-
-
-//   var shortUrl = '';
-//   gurl.shorten(dest.image.url, function(err, newUrl) {
-//     shortUrl = newUrl;
-//   });
-
-//   webshot(
-//     // // test
-//     // 'https://maps.googleapis.com/maps/api/streetview?size=600x400' +
-//     // '&location=39.92825776163083,-98.02838466827663&fov=120' +
-//     // '&key=AIzaSyBbw1DChj5bYB4zDSBhdfmGtZZLL8q3VEg',
-//     dest.image.url,
-//     'streetview.png',
-//     {
-//       shotSize: {
-//         width: 600,
-//         height: 378
-//       }
-//     },
-//     function(err){
-//       if (!err){
-//         // tweet('hello world', './streetview.png');
-//         tagImage(shortUrl);
-//       }
-//     }
-//   );
-
-//   // console.log(url);
-// };
-
-
-
-// getStreetView(there);
-
-
-// var getPlaces = function(location){
-//   gmap.placesNearby({
-//     location: location.coords,
-//     radius: 5000
-//   }, function(err, response){
-//     if (!err){
-//       var data = response.json.results;
-
-//       for (var i = 0; i < data.length; i++){
-//         console.log(data[i].name);
-//         // console.log('open now: ' + data[i].opening_hours.open_now);
-//         // console.log('photos: ' + data[i].photos.length);
-//         // console.log('place ID: ' + data[i].place_id);
-//         // console.log(data[i].types);
-//       }
-//     }
-//   });
-// };
-
-// getPlaces(there);
-
-
-
-// getLocalTime = function(location){
-//   var date = new Date();
-//   var timestamp = date.getTime();
-//   var timestampSecs = Math.floor(timestamp / 1000);
-
-
-//   gmap.timezone({
-//     location: location.coords,
-//     timestamp: timestampSecs
-//   }, function(err, response){
-//     if (!err){
-//       callback(timeresponse);
-
-//       var date = new Date(timestamp);
-//       var hours = date.getHours();
-//       var minutes = "0" + date.getMinutes();
-//       var formattedTime = hours + ':' + minutes.substr(-2);
-//     }
-//   });
-// };
-
-
-// var tweeted = function(err, data, response){
-//   if (err){
-//     console.log(err);
-//   } else {
-//     console.log(data.text);
-
-//     // updateHere();
-//   }
-// };
-
-// var tweet = function(text, image){
-//   if (image){
-
-//     var b64content = fs.readFileSync(image, { encoding: 'base64' });
-//     T.post('media/upload', { media_data: b64content }, function (err, data, response) {
-//       // now we can assign alt text to the media, for use by screen readers and 
-//       // other text-based presentations and interpreters 
-//       var mediaIdStr = data.media_id_string;
-//       // var altText = "Small flowers in a planter on a sunny balcony, blossoming.";
-//       // var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } };
-//       var meta_params = { media_id: mediaIdStr};
-     
-//       T.post('media/metadata/create', meta_params, function (err, data, response) {
-//         if (!err) {
-//           var params = { status: text, media_ids: [mediaIdStr] };
-     
-//           T.post('statuses/update', params, tweeted);
-//         }
-//       });
-//     });
-
-//   } else {
-
-//     T.post('statuses/update', {status: text}, tweeted);
-//   }
-
-// };
-
-/*
-  tweet contents
-    distance walked
-    location
-
-
-
-*/
-
-
-
-
