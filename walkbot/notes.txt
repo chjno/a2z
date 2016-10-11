@@ -42,3 +42,20 @@ time
   location=
   &timestamp=
   &key=
+
+
+
+directions
+https://maps.googleapis.com/maps/api/directions/json?origin=39.967627,-98.042574&destination=39.667627,-98.042574&key=
+
+streetview
+https://maps.googleapis.com/maps/api/streetview?size=600x400&fov=120&location=40.02081435058513,-98.06740391110627&key=
+
+place
+https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurant&location=39.967627,-98.042574&key=
+
+place details
+https://maps.googleapis.com/maps/api/place/details/json?placeid=ChIJ7YHZOR8-mIcRx-LM-9-6nZo&key=
+
+timezone
+https://maps.googleapis.com/maps/api/timezone/json?location=39.967627,-98.042574&timestamp=1476080617&key=
