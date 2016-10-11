@@ -12,44 +12,63 @@ var clar = new Clarifai.App(creds.c.id, creds.c.secret);
 var GoogleURL = require('google-url');
 var gurl = new GoogleURL({key: creds.g});
 
-var init = function(){
-  console.log(' ');
-  console.log(' ');
-  console.log(' ');
-  console.log(' ');
-  console.log(' ');
-  if (tweet.first){
-    there.getRoute();
-  } else {
-    here.coords = there.coords;
-    console.log(there.route.endAddress);
-    var matches = there.route.endAddress.match(/,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/);
-    if (matches.length > 0){
-      here.location = matches[1] + ', ' + matches[2];
-    }
-    here.distance += there.route.distance.value;
-    if (there.place.id){
-      here.history.push(there.place.id);
-    }
-
-    tweet.updateProfile();
-
-    fs.writeFile('./origin.js', 'module.exports = ' + util.inspect(here, {depth: null}),
-      function(err){
-
-      }
-    );
-
-    there.coords = [];
-    there.route = {};
-    // there.localTime = ;
-    there.place = {};
-    there.streetView = {};
-    there.foundPhoto = false;
-
-    setTimeout(there.newDest, tweet.timeout);
-    console.log('will tweet again in ' + tweet.timeout + ' secs');
+var loopCount = 0;
+var multiplierAdjust = 0;
+var radiusAdjust = 0;
+var loopChecker = function(){
+  loopCount++;
+  if (loopCount > 25){
+    process.exit();
   }
+  if (loopCount % 2 == 0){
+    multiplierAdjust += 0.01;
+    radiusAdjust += 1000;
+    console.log('adjust x ' + loopCount / 2);
+    console.log(' ');
+  }
+};
+
+var init = function(){
+  here.coords = there.coords;
+  // console.log(there.route.endAddress);
+  var matches = there.route.endAddress.match(/,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/);
+  if (matches.length > 0){
+    here.location = matches[1] + ', ' + matches[2];
+  }
+  here.distance += there.route.distance.value;
+  if (there.place.id){
+    here.history.push(there.place.id);
+  }
+
+  tweet.updateProfile();
+
+  fs.writeFile('./here.js', 'module.exports = ' + util.inspect(here, {depth: null}),
+    function(err){
+
+    }
+  );
+
+  there.coords = [];
+  there.route = {};
+  // there.localTime = ;
+  there.place = {};
+  there.streetView = {};
+  there.foundPhoto = false;
+
+  multiplierAdjust = 0;
+  radiusAdjust = 0;
+
+  setTimeout(there.newDest, tweet.timeout);
+
+  var timeoutReadable = [];
+  timeoutReadable[0] = Math.floor(((tweet.timeout / (1000*60*60)) % 24));
+  timeoutReadable[1] = Math.floor(((tweet.timeout / (1000*60)) % 60));
+  timeoutReadable[2] = Math.floor((tweet.timeout / 1000) % 60);
+
+  console.log('will tweet again in ' + timeoutReadable.join(':'));
+  console.log(' ');
+  console.log(' ');
+  console.log(' ');
 };
 
 
@@ -62,10 +81,6 @@ var tweet = {
   }, 
 
   tweeted: function(err, data, response){
-    if (tweet.first){
-      tweet.first = false;
-    }
-
     if (!err){
       console.log('tweeted: ' + data.text);
       // here.update();
@@ -84,9 +99,6 @@ var tweet = {
         console.log('bio updated');
       }
     });
-
-
-      // https://api.twitter.com/1.1/account/update_profile.json?description=Keep%20calm%20and%20rock%20on
   },
 
   updateStatus: function(text, image){
@@ -95,11 +107,7 @@ var tweet = {
 
       var b64content = fs.readFileSync(image, { encoding: 'base64' });
       T.post('media/upload', { media_data: b64content }, function (err, data, response) {
-        // now we can assign alt text to the media, for use by screen readers and 
-        // other text-based presentations and interpreters 
         var mediaIdStr = data.media_id_string;
-        // var altText = "Small flowers in a planter on a sunny balcony, blossoming.";
-        // var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } };
         var meta_params = { media_id: mediaIdStr};
        
         T.post('media/metadata/create', meta_params, function (err, data, response) {
@@ -132,19 +140,18 @@ var tweet = {
   }
 };
 
+// var here = {
+//   coords: [39.967627, -98.042574],
+//   location: 'Superior, KS',
+//   distance: 0,
+//   history: [],
+// };
 
 
-var here = {
-  coords: [39.967627, -98.042574],
-  location: 'Superior, KS',
-  distance: 0,
-  history: [],
-};
-
-
+var here = require('./here.js');
 
 var there = {
-  coords: [39.967627, -98.042574],
+  coords: [],
   route: {},
   // localTime: ,
   place: {},
@@ -152,14 +159,16 @@ var there = {
   foundPhoto: false,
 
   newDest: function(){
-    console.log('init: starting again');
+    console.log('newDest: start');
     var latMin = 24.544090;
     var latMax = 49.002389;
     var longMin = -124.733056;
     var longMax = -66.949778;
 
-    var latMultiplier = Math.random() < 0.5 ? -0.06 : 0.06;
-    var longMultiplier = Math.random() < 0.5 ? -0.06 : 0.06;
+    var multiplier = 0.06 + multiplierAdjust;
+
+    var latMultiplier = Math.random() < 0.5 ? -multiplier : multiplier;
+    var longMultiplier = Math.random() < 0.5 ? -multiplier : multiplier;
 
     var newLat = here.coords[0] + (Math.random() + (0.009 / 0.06)) * latMultiplier;
     var newLong = here.coords[1] + (Math.random() + (0.009 / 0.06)) * longMultiplier;
@@ -197,13 +206,13 @@ var there = {
 
           // bookmark
 
-          // if (tweet.first){
+          // if (here.distance == 0){
           //   tweet.timeout = 900000;
           // } else {
-          //   tweet.timeout = there.route.duration.value * 10000;
+            tweet.timeout = there.route.duration.value * 1000;
           // }
-          tweet.timeout = 60000/2;
-          console.log('timeout ' + tweet.timeout);
+          // tweet.timeout = 60000/2;
+          // console.log('timeout ' + tweet.timeout);
           console.log(' ');
 
 
@@ -321,7 +330,7 @@ var there = {
     console.log('places: start');
     gmap.placesNearby({
       location: there.coords,
-      radius: 5000
+      radius: 5000 + radiusAdjust
     }, function(err, response){
       if (!err){
         var data = response.json.results;
@@ -346,6 +355,7 @@ var there = {
                   there.place.types = data[i].types;
                   there.place.vicinity = data[i].vicinity;
                   console.log('places: found unique photo');
+                  console.log(' ');
                   there.foundPhoto = true;
                   break;
                 }
@@ -359,15 +369,16 @@ var there = {
             console.log('no places w/ photos nearby');
 
             // start over
+            loopChecker();
             there.newDest();
 
           }
-          console.log(' ');
         } else {
           console.log('no places nearby');
           console.log(' ');
 
           // start over
+          loopChecker();
           there.newDest();
 
         }
@@ -419,15 +430,16 @@ var there = {
             if (badTagCount > 9){
               if (!there.foundPhoto){
                 console.log('clarifai: no street image 1');
+                console.log(' ');
                 there.getPlaces();
               } else {
                 console.log('clarifai: no street image 2');
+                console.log(' ');
                 there.getPlacePhoto(there.place);
               }
             } else {
               tweet.updateStatus(obj.tags[0][0], obj.localPath);
             }
-            console.log(' ');
           } else {
             obj.tags = [];
             for (var i = 0; i < data.length; i++){
@@ -443,12 +455,14 @@ var there = {
               here.history.push(there.place.id);
               there.getPlaces();
             }
-          }  
+          }
+          console.log(' ');
         } else {
 
 
           // clarifai broken?
           // start over
+          loopChecker();
           there.newDest();
 
         }
@@ -460,4 +474,4 @@ var there = {
   }
 };
 
-init();
+there.newDest();
