@@ -25,7 +25,7 @@ var loopChecker = function(){
   if (loopCount > 25){
     process.exit();
   }
-  if (loopCount % 2 == 0){
+  if (loopCount % 2 === 0){
     multiplierAdjust += 0.01;
     radiusAdjust += 1000;
     console.log('adjust x ' + loopCount / 2);
@@ -183,10 +183,10 @@ var there = {
     var newLong = here.coords[1] + (Math.random() + (0.009 / 0.06)) * longMultiplier;
 
     while (newLat < latMin || newLat > latMax){
-      var newLat = here.coords[0] + Math.random() * latMultiplier;
+      newLat = here.coords[0] + Math.random() * latMultiplier;
     }
     while (newLong < longMin || newLong > longMax){
-      var newLong = here.coords[1] + Math.random() * longMultiplier;
+      newLong = here.coords[1] + Math.random() * longMultiplier;
     }
 
     there.coords = [newLat, newLong];
@@ -305,7 +305,7 @@ var there = {
         if (!err){
           there.place.localPath = './place.png';
           console.log('place photo: downloaded');
-          there.tagImage(there.place)
+          there.tagImage(there.place);
         }
       }
     );
@@ -458,10 +458,10 @@ var there = {
             }
           } else {
             obj.tags = [];
-            for (var i = 0; i < data.length; i++){
-              obj.tags[i] = [];
-              obj.tags[i][0] = data[i].name;
-              obj.tags[i][1] = data[i].value;
+            for (var j = 0; j < data.length; j++){
+              obj.tags[j] = [];
+              obj.tags[j][0] = data[j].name;
+              obj.tags[j][1] = data[j].value;
             }
             if (obj.tags.indexOf('illustration') == -1){
               if (testing){
