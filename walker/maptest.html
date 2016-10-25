@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 7,
+          center: new google.maps.LatLng(39.967627,-98.042574),
+          mapTypeId: 'terrain'
+        });
+
+        var coords = [
+          [39.8982387,-98.03860519999999],
+          [40.1408402,-97.72281910000001],
+          [39.8707453,-97.966889],
+          [40.18556109999999,-97.68920779999999],
+          [39.7843695,-97.8950807],
+          [40.2494333,-97.57586099999999],
+          [40.0082369,-97.9292753],
+          [39.7813737,-97.8952137],
+          [39.972352,-97.95547499999999],
+          [39.9394684,-98.042614],
+          [40.1663933,-97.5855974],
+          [40.166378,-97.59044999999999],
+          [40.1663933,-97.58587519999999],
+          [40.1662199,-97.5769383],
+          [40.30175,-97.67352699999999],
+          [40.1693168,-97.5766433],
+          [40.1647636,-97.5765251],
+          [40.1759406,-97.5758218]
+        ]
+
+        for (var i = 0; i < coords.length; i++){
+          var latLng = new google.maps.LatLng(coords[i][0],coords[i][1]);
+          var marker = new google.maps.Marker({
+            position: latLng,
+            map: map
+          });
+        }
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
+  </body>
+</html>
