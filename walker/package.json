@@ -12,6 +12,7 @@
     "@google/maps": "^0.2.1",
     "clarifai": "^2.0.9",
     "google-url": "0.0.4",
+    "jsonfile": "^2.4.0",
     "twit": "^2.2.5",
     "webshot": "^0.18.0"
   }
