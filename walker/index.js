@@ -1,3 +1,5 @@
+var testing = true;
+
 var creds = require('./creds.js');
 var gmap = require('@google/maps').createClient({
   key: creds.g
@@ -6,6 +8,7 @@ var webshot = require('webshot');
 var twit = require('twit');
 var T = new twit(creds.t);
 var fs = require('fs');
+var request = require('request');
 var util = require('util');
 var Clarifai = require('clarifai');
 var clar = new Clarifai.App(creds.c.id, creds.c.secret);
@@ -15,6 +18,8 @@ var gurl = new GoogleURL({key: creds.g});
 var loopCount = 0;
 var multiplierAdjust = 0;
 var radiusAdjust = 0;
+
+
 var loopChecker = function(){
   loopCount++;
   if (loopCount > 25){
@@ -27,6 +32,7 @@ var loopChecker = function(){
     console.log(' ');
   }
 };
+
 
 var init = function(){
   here.coords = there.coords;
@@ -58,8 +64,10 @@ var init = function(){
   multiplierAdjust = 0;
   radiusAdjust = 0;
 
-  setTimeout(there.newDest, tweet.timeout);
-
+  if (!testing){
+    setTimeout(there.newDest, tweet.timeout);
+  }
+  
   var timeoutReadable = [];
   timeoutReadable[0] = Math.floor(((tweet.timeout / (1000*60*60)) % 24));
   timeoutReadable[1] = Math.floor(((tweet.timeout / (1000*60)) % 60));
@@ -78,7 +86,7 @@ var tweet = {
 
   genText: function(){
 
-  }, 
+  },
 
   tweeted: function(err, data, response){
     if (!err){
@@ -149,6 +157,7 @@ var tweet = {
 
 
 var here = require('./here.js');
+
 
 var there = {
   coords: [],
@@ -438,7 +447,14 @@ var there = {
                 there.getPlacePhoto(there.place);
               }
             } else {
-              tweet.updateStatus(obj.tags[0][0], obj.localPath);
+              if (testing){
+                console.log('');
+                console.log('tweet');
+                console.log(obj.tags[0][0]);
+                console.log(obj.localPath);
+              } else {
+                tweet.updateStatus(obj.tags[0][0], obj.localPath);
+              }
             }
           } else {
             obj.tags = [];
@@ -448,7 +464,14 @@ var there = {
               obj.tags[i][1] = data[i].value;
             }
             if (obj.tags.indexOf('illustration') == -1){
-              tweet.updateStatus(obj.tags[0][0], obj.localPath);
+              if (testing){
+                console.log('');
+                console.log('tweet');
+                console.log(obj.tags[0][0]);
+                console.log(obj.localPath);
+              } else {
+                tweet.updateStatus(obj.tags[0][0], obj.localPath);
+              }
             } else {
               console.log('clarifai: illustration');
               console.log(' ');
@@ -473,5 +496,6 @@ var there = {
     );
   }
 };
+
 
 there.newDest();
