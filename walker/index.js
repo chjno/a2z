@@ -1,4 +1,6 @@
-var testing = true;
+var post = true;
+var shortTimeout = true;
+var shortTimeoutLength = 1000 * 60;
 
 var creds = require('./creds.js');
 var gmap = require('@google/maps').createClient({
@@ -14,10 +16,21 @@ var Clarifai = require('clarifai');
 var clar = new Clarifai.App(creds.c.id, creds.c.secret);
 var GoogleURL = require('google-url');
 var gurl = new GoogleURL({key: creds.g});
+var jsonfile = require('jsonfile');
 
 var loopCount = 0;
 var multiplierAdjust = 0;
 var radiusAdjust = 0;
+
+
+var download = function(uri, filename, callback){
+  request.head(uri, function(err, res, body){
+    console.log('content-type:', res.headers['content-type']);
+    console.log('content-length:', res.headers['content-length']);
+
+    request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+  });
+};
 
 
 var loopChecker = function(){
@@ -35,18 +48,26 @@ var loopChecker = function(){
 
 
 var init = function(){
+  here.history.coords.push(here.coords);
   here.coords = there.coords;
   // console.log(there.route.endAddress);
   var matches = there.route.endAddress.match(/,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/);
-  if (matches.length > 0){
+  try {
     here.location = matches[1] + ', ' + matches[2];
+  } catch (e) {
+    console.log('');
+    console.log(e);
+    console.log('');
+    console.log(matches);
+    console.log('');
   }
   here.distance += there.route.distance.value;
   if (there.place.id){
-    here.history.push(there.place.id);
+    here.history.places.push(there.place.id);
   }
 
   tweet.updateProfile();
+
 
   fs.writeFile('./here.js', 'module.exports = ' + util.inspect(here, {depth: null}),
     function(err){
@@ -64,19 +85,61 @@ var init = function(){
   multiplierAdjust = 0;
   radiusAdjust = 0;
 
-  if (!testing){
+  if (shortTimeout){
+    setTimeout(there.newDest, shortTimeoutLength);
+    console.log('will tweet again in ' + shortTimeoutLength.toString());
+  } else {
     setTimeout(there.newDest, tweet.timeout);
+    var timeoutReadable = [];
+    timeoutReadable[0] = Math.floor(((tweet.timeout / (1000*60*60)) % 24));
+    timeoutReadable[1] = Math.floor(((tweet.timeout / (1000*60)) % 60));
+    timeoutReadable[2] = Math.floor((tweet.timeout / 1000) % 60);
+
+    console.log('will tweet again in ' + timeoutReadable.join(':'));
   }
   
-  var timeoutReadable = [];
-  timeoutReadable[0] = Math.floor(((tweet.timeout / (1000*60*60)) % 24));
-  timeoutReadable[1] = Math.floor(((tweet.timeout / (1000*60)) % 60));
-  timeoutReadable[2] = Math.floor((tweet.timeout / 1000) % 60);
+  console.log(' ');
+  console.log(' ');
+  console.log(' ');
+};
 
-  console.log('will tweet again in ' + timeoutReadable.join(':'));
-  console.log(' ');
-  console.log(' ');
-  console.log(' ');
+var getMap = function(){
+  console.log('trip map: start');
+
+  var url = 'https://maps.googleapis.com/maps/api/staticmap?' +
+    'size=640x200&' +
+    'scale=2&' +
+    'markers=' + here.history.coords.join('|') +
+    '&path=' + here.history.coords.join('|') +
+    '&key=' + creds.g;
+  // gurl.shorten(url, function(err, newUrl) {
+  //   url = newUrl;
+  // });
+
+    download(url, 'header.png', function(){
+      localPath = './header.png';
+      console.log('trip map: downloaded');
+      console.log(' ');
+      tweet.updateHeader(localPath);
+    });
+
+  // webshot(
+  //   url,
+  //   'header.png',
+  //   {
+  //     shotSize: {
+  //       width: 640,
+  //       height: 458
+  //     }
+  //   },
+  //   function(err){
+  //     if (!err){
+  //       console.log('trip map: downloaded');
+  //       console.log(' ');
+  //       tweet.updateHeader('./header.png');
+  //     }
+  //   }
+  // );
 };
 
 
@@ -92,6 +155,7 @@ var tweet = {
     if (!err){
       console.log('tweeted: ' + data.text);
       // here.update();
+      getMap();
       init();
     }
   },
@@ -102,9 +166,23 @@ var tweet = {
 
     var location = here.location.length <= 30 ? here.location : here.location.substring(0,30);
 
-    T.post('account/update_profile', {description: bio, location: location}, function(err, data, response){
+    T.post('account/update_profile', {description: bio, location: location}, function (err, data, response){
       if (!err){
         console.log('bio updated');
+      }
+    });
+  },
+
+  updateHeader: function(image){
+    var b64content = fs.readFileSync(image, { encoding: 'base64' });
+    T.post('account/update_profile_banner', {banner: b64content}, function (err, data, response){
+      if (!err){
+        jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){
+          if (!err){
+            console.log('header response written to file');
+          }
+        });
+        console.log('header updated');
       }
     });
   },
@@ -152,7 +230,10 @@ var tweet = {
 //   coords: [39.967627, -98.042574],
 //   location: 'Superior, KS',
 //   distance: 0,
-//   history: [],
+//   history: {
+//     places: [],
+//     coords: []
+//   },
 // };
 
 
@@ -250,6 +331,13 @@ var there = {
       there.streetView.shortUrl = newUrl;
     });
 
+    // download(there.streetView.url, 'streetview.jpg', function(){
+    //   there.streetView.localPath = './streetview.jpg';
+    //   console.log('streetview: downloaded');
+    //   console.log(' ');
+    //   there.tagImage(there.streetView);
+    // });
+
     webshot(
       there.streetView.url,
       'streetview.png',
@@ -292,23 +380,29 @@ var there = {
       there.place.shortUrl = newUrl;
     });
 
-    webshot(
-      obj.url,
-      'place.png',
-      {
-        shotSize: {
-          width: cropWidth,
-          height: cropHeight
-        }
-      },
-      function(err){
-        if (!err){
-          there.place.localPath = './place.png';
-          console.log('place photo: downloaded');
-          there.tagImage(there.place);
-        }
-      }
-    );
+    download(obj.url, 'place.jpg', function(){
+      there.place.localPath = './place.jpg';
+      console.log('place photo: downloaded');
+      there.tagImage(there.place);
+    });
+
+    // webshot(
+    //   obj.url,
+    //   'place.png',
+    //   {
+    //     shotSize: {
+    //       width: cropWidth,
+    //       height: cropHeight
+    //     }
+    //   },
+    //   function(err){
+    //     if (!err){
+    //       there.place.localPath = './place.png';
+    //       console.log('place photo: downloaded');
+    //       there.tagImage(there.place);
+    //     }
+    //   }
+    // );
   },
 
   // getDetails: function(placeId, array){
@@ -354,7 +448,7 @@ var there = {
 
           for (var i = 0; i < data.length; i++){
             if ('photos' in data[i]){
-              if (here.history.indexOf(data[i].place_id) == -1){
+              if (here.history.places.indexOf(data[i].place_id) == -1){
                 if (!data[i].photos[0].html_attributions[0].includes(data[i].name)){
                   there.coords[0] = data[i].geometry.location.lat;
                   there.coords[1] = data[i].geometry.location.lng;
@@ -447,13 +541,20 @@ var there = {
                 there.getPlacePhoto(there.place);
               }
             } else {
-              if (testing){
+              var postText = obj.tags[0][0];
+
+              if (obj.tags[0][0] == 'horizontal plane'){
+                postText = obj.tags[0][1];
+              }
+
+              if (post){
+                tweet.updateStatus(postText, obj.localPath);
+              } else {
                 console.log('');
                 console.log('tweet');
-                console.log(obj.tags[0][0]);
+                console.log(there.coords);
+                console.log(postText);
                 console.log(obj.localPath);
-              } else {
-                tweet.updateStatus(obj.tags[0][0], obj.localPath);
               }
             }
           } else {
@@ -464,18 +565,25 @@ var there = {
               obj.tags[j][1] = data[j].value;
             }
             if (obj.tags.indexOf('illustration') == -1){
-              if (testing){
+              var postText = obj.tags[0][0];
+
+              if (obj.tags[0][0] == 'horizontal plane'){
+                postText = obj.tags[0][1];
+              }
+
+              if (post){
+                tweet.updateStatus(postText, obj.localPath);
+              } else {
                 console.log('');
                 console.log('tweet');
-                console.log(obj.tags[0][0]);
+                console.log(there.coords);
+                console.log(postText);
                 console.log(obj.localPath);
-              } else {
-                tweet.updateStatus(obj.tags[0][0], obj.localPath);
               }
             } else {
               console.log('clarifai: illustration');
               console.log(' ');
-              here.history.push(there.place.id);
+              here.history.places.push(there.place.id);
               there.getPlaces();
             }
           }
