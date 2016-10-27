@@ -18,6 +18,9 @@ var GoogleURL = require('google-url');
 var gurl = new GoogleURL({key: creds.g});
 var jsonfile = require('jsonfile');
 
+var wik = require('./js/wiki.js');
+var wiki = new wik.Wiki(request);
+
 var loopCount = 0;
 var multiplierAdjust = 0;
 var radiusAdjust = 0;
@@ -117,10 +120,9 @@ var getMap = function(){
   // });
 
     download(url, 'header.png', function(){
-      localPath = './header.png';
       console.log('trip map: downloaded');
       console.log(' ');
-      tweet.updateHeader(localPath);
+      tweet.updateHeader('./header.png');
     });
 
   // webshot(
@@ -153,6 +155,7 @@ var tweet = {
 
   tweeted: function(err, data, response){
     if (!err){
+      // jsonfile.writeFile('tweetresponse.json', response, {spaces: 2}, function (err){});
       console.log('tweeted: ' + data.text);
       // here.update();
       getMap();
@@ -168,6 +171,7 @@ var tweet = {
 
     T.post('account/update_profile', {description: bio, location: location}, function (err, data, response){
       if (!err){
+        // jsonfile.writeFile('bioresponse.json', response, {spaces: 2}, function (err){});
         console.log('bio updated');
       }
     });
@@ -175,16 +179,43 @@ var tweet = {
 
   updateHeader: function(image){
     var b64content = fs.readFileSync(image, { encoding: 'base64' });
-    T.post('account/update_profile_banner', {banner: b64content}, function (err, data, response){
+    var params = {
+      banner: b64content,
+      width: 1280,
+      height: 400
+    }
+    T.post('account/update_profile_banner', params, function (err, data, response){
       if (!err){
-        jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){
-          if (!err){
-            console.log('header response written to file');
-          }
-        });
+        jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){});
+        console.log('header response written to file');
         console.log('header updated');
+      } else {
+        jsonfile.writeFile('headererr.json', response, {spaces: 2}, function (err){});
+
       }
     });
+
+    // T.post('media/upload', { media_data: b64content }, function (err, data, response) {
+    //   // jsonfile.writeFile('mediaresponse.json', response, {spaces: 2}, function (err){});
+    //   var mediaIdStr = data.media_id_string;
+    //   var meta_params = { media_id: mediaIdStr};
+
+    //   T.post('media/metadata/create', meta_params, function (err, data, response) {
+    //     if (!err) {
+    //       T.post('account/update_profile_banner', {banner: mediaIdStr}, function (err, data, response){
+    //         if (!err){
+    //           jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){});
+    //           console.log('header response written to file');
+    //           console.log('header updated');
+    //         } else {
+    //           jsonfile.writeFile('headerresponse.json', err, {spaces: 2}, function (err){});
+    //         }
+    //       });
+    //     }
+    //   });
+    // });
+
+
   },
 
   updateStatus: function(text, image){
@@ -193,6 +224,7 @@ var tweet = {
 
       var b64content = fs.readFileSync(image, { encoding: 'base64' });
       T.post('media/upload', { media_data: b64content }, function (err, data, response) {
+        // jsonfile.writeFile('mediaresponse.json', response, {spaces: 2}, function (err){});
         var mediaIdStr = data.media_id_string;
         var meta_params = { media_id: mediaIdStr};
 
@@ -527,9 +559,11 @@ var there = {
               if (badTags.indexOf(data[i].name) != -1){
                 badTagCount++;
               }
-              obj.tags[i] = [];
-              obj.tags[i][0] = data[i].name;
-              obj.tags[i][1] = data[i].value;
+              if (data[j].name != 'horizontal plane'){
+                obj.tags[j] = [];
+                obj.tags[j][0] = data[j].name;
+                obj.tags[j][1] = data[j].value;
+              }
             }
 
             if (badTagCount > 9){
@@ -545,11 +579,16 @@ var there = {
             } else {
               postText = obj.tags[0][0];
 
-              if (obj.tags[0][0] == 'horizontal plane'){
-                postText = obj.tags[0][1];
-              }
+              // if (obj.tags[0][0] == 'horizontal plane'){
+              //   postText = obj.tags[1][0];
+              // }
 
               if (post){
+                console.log('');
+                for (var k = 0; k < obj.tags.length; k++){
+                  console.log(obj.tags[k][0]);
+                }
+                console.log('');
                 tweet.updateStatus(postText, obj.localPath);
               } else {
                 console.log('');
@@ -562,20 +601,33 @@ var there = {
           } else {
             obj.tags = [];
             for (var j = 0; j < data.length; j++){
-              obj.tags[j] = [];
-              obj.tags[j][0] = data[j].name;
-              obj.tags[j][1] = data[j].value;
+              if (data[j].name != 'horizontal plane'){
+                obj.tags[j] = [];
+                obj.tags[j][0] = data[j].name;
+                obj.tags[j][1] = data[j].value;
+              }
             }
+
+            // if not an illustration
             if (obj.tags.indexOf('illustration') == -1){
               postText = obj.tags[0][0];
 
-              if (obj.tags[0][0] == 'horizontal plane'){
-                postText = obj.tags[0][1];
-              }
+              // if (obj.tags[0][0] == 'horizontal plane'){
+              //   postText = obj.tags[1][0];
+              // }
 
               if (post){
+
+                // tweet place
+                console.log('');
+                for (var k = 0; k < obj.tags.length; k++){
+                  console.log(obj.tags[k][0]);
+                }
+                console.log('');
                 tweet.updateStatus(postText, obj.localPath);
               } else {
+
+                // for testing: if (post == false)
                 console.log('');
                 console.log('tweet');
                 console.log(there.coords);
@@ -583,6 +635,8 @@ var there = {
                 console.log(obj.localPath);
               }
             } else {
+
+              // if illustration in place's tags
               console.log('clarifai: illustration');
               console.log(' ');
               here.history.places.push(there.place.id);
@@ -608,4 +662,8 @@ var there = {
 };
 
 
-there.newDest();
+// there.newDest();
+// tweet.updateHeader('./header.png');
+
+
+wiki.query('tree');
