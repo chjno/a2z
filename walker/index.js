@@ -97,7 +97,7 @@ var init = function(){
 
     console.log('will tweet again in ' + timeoutReadable.join(':'));
   }
-  
+
   console.log(' ');
   console.log(' ');
   console.log(' ');
@@ -195,7 +195,7 @@ var tweet = {
       T.post('media/upload', { media_data: b64content }, function (err, data, response) {
         var mediaIdStr = data.media_id_string;
         var meta_params = { media_id: mediaIdStr};
-       
+
         T.post('media/metadata/create', meta_params, function (err, data, response) {
           if (!err) {
             var params = {
@@ -205,7 +205,7 @@ var tweet = {
               display_coordinates: true,
               media_ids: [mediaIdStr]
             };
-       
+
             T.post('statuses/update', params, tweet.tweeted);
           }
         });
@@ -495,6 +495,8 @@ var there = {
       function(response) {
         var data = response.data.outputs[0].data.concepts;
         if (data.length > 0){
+
+          var postText;
           if (obj == there.streetView){
             var badTagCount = 0;
             var badTags = [
@@ -541,7 +543,7 @@ var there = {
                 there.getPlacePhoto(there.place);
               }
             } else {
-              var postText = obj.tags[0][0];
+              postText = obj.tags[0][0];
 
               if (obj.tags[0][0] == 'horizontal plane'){
                 postText = obj.tags[0][1];
@@ -565,7 +567,7 @@ var there = {
               obj.tags[j][1] = data[j].value;
             }
             if (obj.tags.indexOf('illustration') == -1){
-              var postText = obj.tags[0][0];
+              postText = obj.tags[0][0];
 
               if (obj.tags[0][0] == 'horizontal plane'){
                 postText = obj.tags[0][1];
