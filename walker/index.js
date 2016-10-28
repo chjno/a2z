@@ -620,8 +620,8 @@ var there = {
 
                 // tweet place
                 console.log('');
-                for (var k = 0; k < obj.tags.length; k++){
-                  console.log(obj.tags[k][0]);
+                for (var l = 0; l < obj.tags.length; l++){
+                  console.log(obj.tags[l][0]);
                 }
                 console.log('');
                 tweet.updateStatus(postText, obj.localPath);
