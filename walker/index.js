@@ -559,10 +559,10 @@ var there = {
               if (badTags.indexOf(data[i].name) != -1){
                 badTagCount++;
               }
-              if (data[j].name != 'horizontal plane'){
-                obj.tags[j] = [];
-                obj.tags[j][0] = data[j].name;
-                obj.tags[j][1] = data[j].value;
+              if (data[i].name != 'horizontal plane'){
+                obj.tags[i] = [];
+                obj.tags[i][0] = data[i].name;
+                obj.tags[i][1] = data[i].value;
               }
             }
 
@@ -585,8 +585,8 @@ var there = {
 
               if (post){
                 console.log('');
-                for (var k = 0; k < obj.tags.length; k++){
-                  console.log(obj.tags[k][0]);
+                for (var j = 0; j < obj.tags.length; j++){
+                  console.log(obj.tags[j][0]);
                 }
                 console.log('');
                 tweet.updateStatus(postText, obj.localPath);
@@ -600,11 +600,11 @@ var there = {
             }
           } else {
             obj.tags = [];
-            for (var j = 0; j < data.length; j++){
-              if (data[j].name != 'horizontal plane'){
-                obj.tags[j] = [];
-                obj.tags[j][0] = data[j].name;
-                obj.tags[j][1] = data[j].value;
+            for (var k = 0; k < data.length; k++){
+              if (data[k].name != 'horizontal plane'){
+                obj.tags[k] = [];
+                obj.tags[k][0] = data[k].name;
+                obj.tags[k][1] = data[k].value;
               }
             }
 
@@ -662,8 +662,8 @@ var there = {
 };
 
 
-// there.newDest();
+there.newDest();
 // tweet.updateHeader('./header.png');
 
 
-wiki.query('tree');
+// wiki.query('tree');
