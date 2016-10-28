@@ -183,7 +183,7 @@ var tweet = {
       banner: b64content,
       width: 1280,
       height: 400
-    }
+    };
     T.post('account/update_profile_banner', params, function (err, data, response){
       if (!err){
         jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){});
@@ -499,6 +499,7 @@ var there = {
           }
 
           if (there.foundPhoto){
+            console.log('found photo getting route');
             there.getRoute();
           } else {
             console.log('no places w/ photos nearby');
@@ -559,11 +560,9 @@ var there = {
               if (badTags.indexOf(data[i].name) != -1){
                 badTagCount++;
               }
-              if (data[i].name != 'horizontal plane'){
-                obj.tags[i] = [];
-                obj.tags[i][0] = data[i].name;
-                obj.tags[i][1] = data[i].value;
-              }
+              obj.tags[i] = [];
+              obj.tags[i][0] = data[i].name;
+              obj.tags[i][1] = data[i].value;
             }
 
             if (badTagCount > 9){
@@ -577,7 +576,10 @@ var there = {
                 there.getPlacePhoto(there.place);
               }
             } else {
-              postText = obj.tags[0][0];
+              postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
+              while (postText == 'horizontal plane'){
+                postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
+              }
 
               // if (obj.tags[0][0] == 'horizontal plane'){
               //   postText = obj.tags[1][0];
@@ -601,16 +603,17 @@ var there = {
           } else {
             obj.tags = [];
             for (var k = 0; k < data.length; k++){
-              if (data[k].name != 'horizontal plane'){
-                obj.tags[k] = [];
-                obj.tags[k][0] = data[k].name;
-                obj.tags[k][1] = data[k].value;
-              }
+              obj.tags[k] = [];
+              obj.tags[k][0] = data[k].name;
+              obj.tags[k][1] = data[k].value;
             }
 
             // if not an illustration
             if (obj.tags.indexOf('illustration') == -1){
-              postText = obj.tags[0][0];
+              postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
+              while (postText == 'horizontal plane'){
+                postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
+              }
 
               // if (obj.tags[0][0] == 'horizontal plane'){
               //   postText = obj.tags[1][0];
