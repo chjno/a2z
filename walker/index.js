@@ -572,7 +572,8 @@ var there = {
               }
             } else {
               postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
-              while (postText == 'horizontal plane'){
+              // while (postText == 'horizontal plane'){
+              while (postText.indexOf('horizontal') != -1){
                 postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
               }
 
@@ -606,7 +607,8 @@ var there = {
             // if not an illustration
             if (obj.tags.indexOf('illustration') == -1){
               postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
-              while (postText == 'horizontal plane'){
+              // while (postText == 'horizontal plane'){
+              while (postText.indexOf('horizontal') != -1){
                 postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
               }
 
