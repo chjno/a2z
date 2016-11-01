@@ -110,7 +110,7 @@ var getMap = function(){
   console.log('trip map: start');
 
   var url = 'https://maps.googleapis.com/maps/api/staticmap?' +
-    'size=640x200&' +
+    'size=640x640&' +
     'scale=2&' +
     'markers=' + here.history.coords.join('|') +
     '&path=' + here.history.coords.join('|') +
@@ -122,7 +122,7 @@ var getMap = function(){
     download(url, 'header.png', function(){
       console.log('trip map: downloaded');
       console.log(' ');
-      tweet.updateHeader('./header.png');
+      tweet.updateAvatar('./header.png');
     });
 
   // webshot(
@@ -194,28 +194,23 @@ var tweet = {
 
       }
     });
+  },
 
-    // T.post('media/upload', { media_data: b64content }, function (err, data, response) {
-    //   // jsonfile.writeFile('mediaresponse.json', response, {spaces: 2}, function (err){});
-    //   var mediaIdStr = data.media_id_string;
-    //   var meta_params = { media_id: mediaIdStr};
+  updateAvatar: function(image){
+    console.log('updating avatar');
+    var b64content = fs.readFileSync(image, { encoding: 'base64' });
+    var params = {
+      image: b64content
+    };
+    T.post('account/update_profile_image', params, function (err, data, response){
+      console.log('avatar response');
+      if (!err){
+        console.log('avatar updated');
+      } else {
+        console.log('avatar error');
 
-    //   T.post('media/metadata/create', meta_params, function (err, data, response) {
-    //     if (!err) {
-    //       T.post('account/update_profile_banner', {banner: mediaIdStr}, function (err, data, response){
-    //         if (!err){
-    //           jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){});
-    //           console.log('header response written to file');
-    //           console.log('header updated');
-    //         } else {
-    //           jsonfile.writeFile('headerresponse.json', err, {spaces: 2}, function (err){});
-    //         }
-    //       });
-    //     }
-    //   });
-    // });
-
-
+      }
+    });
   },
 
   updateStatus: function(text, image){
