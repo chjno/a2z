@@ -1,8 +1,8 @@
 var post = true;
-var shortTimeout = false;
+var shortTimeout = true;
 var shortTimeoutLength = 5000;
 
-var creds = require('./creds.js');
+var creds = require('./js/creds.js');
 var gmap = require('@google/maps').createClient({
   key: creds.g
 });
@@ -71,9 +71,9 @@ var init = function(){
   tweet.updateProfile();
 
 
-  // fs.writeFile('./here.js', 'module.exports = ' + util.inspect(here, {depth: null}),
+  // fs.writeFile('./js/here.js', 'module.exports = ' + util.inspect(here, {depth: null}),
   var json = JSON.stringify(here, null, 2);
-  fs.writeFile('./here.js', 'module.exports = ' + json, function (err){
+  fs.writeFile('./js/here.js', 'module.exports = ' + json, function (err){
       if (!err){
         console.log('here.js written');
       } else {
@@ -125,10 +125,10 @@ var tweet = {
       '&path=' + here.history.coords.join('|') +
       '&key=' + creds.g;
 
-    download(url, 'header.png', function(){
+    download(url, './pics/tripmap.png', function(){
       console.log('trip map: downloaded');
       console.log(' ');
-      tweet.updateAvatar('./header.png');
+      tweet.updateAvatar('./pics/tripmap.png');
     });
 
   },
@@ -252,7 +252,7 @@ var tweet = {
 // };
 
 
-var here = require('./here.js');
+var here = require('./js/here.js');
 
 
 var there = {
@@ -305,7 +305,7 @@ var there = {
             console.log('status: ' + tweet.text);
             console.log('there: ' + there.coords);
             console.log('');
-            
+
             var timeout = there.route.duration.value * 1000;
 
             if (shortTimeout){
@@ -402,8 +402,8 @@ var there = {
       if (!err){
         there.place.shortUrl = newUrl;
 
-        download(obj.url, 'place.jpg', function(){
-          there.place.localPath = './place.jpg';
+        download(obj.url, './pics/place.jpg', function(){
+          there.place.localPath = './pics/place.jpg';
           console.log('place photo: downloaded');
           there.tagImage(there.place);
         });
