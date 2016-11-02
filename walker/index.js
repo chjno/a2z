@@ -110,15 +110,16 @@ var tweet = {
   getMap: function(){
     console.log('trip map: start');
 
+    var youwerehere = here.history.coords.slice(0, here.history.coords.length-1);
+    var youarehere = here.history.coords[here.history.coords.length-1];
+
     var url = 'https://maps.googleapis.com/maps/api/staticmap?' +
       'size=640x640&' +
       'scale=2&' +
-      'markers=' + here.history.coords.join('|') +
+      'markers=' + youwerehere.join('|') +
+      '&markers=color:green|' + youarehere.join() +
       '&path=' + here.history.coords.join('|') +
       '&key=' + creds.g;
-    // gurl.shorten(url, function(err, newUrl) {
-    //   url = newUrl;
-    // });
 
     download(url, 'header.png', function(){
       console.log('trip map: downloaded');
