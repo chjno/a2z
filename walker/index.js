@@ -18,8 +18,8 @@ var GoogleURL = require('google-url');
 var gurl = new GoogleURL({key: creds.g});
 var jsonfile = require('jsonfile');
 
-var wik = require('./js/wiki.js');
-var wiki = new wik.Wiki(request);
+// var wik = require('./js/wiki.js');
+// var wiki = new wik.Wiki(request);
 
 var loopCount = 0;
 var multiplierAdjust = 0;
@@ -44,7 +44,7 @@ var loopChecker = function(){
   if (loopCount % 2 === 0){
     multiplierAdjust += 0.01;
     radiusAdjust += 1000;
-    console.log('adjust x ' + loopCount / 2);
+    console.log('adjust x' + loopCount / 2);
     console.log(' ');
   }
 };
@@ -53,15 +53,14 @@ var loopChecker = function(){
 var init = function(){
   here.history.coords.push(here.coords);
   here.coords = there.coords;
-  // console.log(there.route.endAddress);
   var matches = there.route.endAddress.match(/,\s{1}(.*),\s{1}([A-Z]{2})\s{1}/);
   try {
     here.location = matches[1] + ', ' + matches[2];
   } catch (e) {
+    console.log('regex error');
+    console.log(there.route.endAddress);
     console.log('');
     console.log(e);
-    console.log('');
-    console.log(matches);
     console.log('');
   }
   here.distance += there.route.distance.value;
@@ -100,10 +99,10 @@ var tweet = {
 
   tweeted: function(err, data, response){
     if (!err){
-      // jsonfile.writeFile('tweetresponse.json', response, {spaces: 2}, function (err){});
       console.log('tweeted: ' + data.text);
-      // here.update();
       init();
+    } else {
+      console.log('tweet error')
     }
   },
 
@@ -137,7 +136,6 @@ var tweet = {
 
     T.post('account/update_profile', {description: bio, location: location}, function (err, data, response){
       if (!err){
-        // jsonfile.writeFile('bioresponse.json', response, {spaces: 2}, function (err){});
         console.log('bio updated');
       } else {
         console.log('bio update error');
@@ -192,7 +190,6 @@ var tweet = {
         console.log(image);
         var b64content = fs.readFileSync(image, { encoding: 'base64' });
         T.post('media/upload', { media_data: b64content }, function (err, data, response) {
-          // jsonfile.writeFile('mediaresponse.json', response, {spaces: 2}, function (err){});
           var mediaIdStr = data.media_id_string;
           var meta_params = { media_id: mediaIdStr};
 
@@ -225,6 +222,9 @@ var tweet = {
       }
 
     };
+
+    console.log('completed in ' + loopCount + ' loops');
+    loopCount = 0;
 
     setTimeout(updateStatus, delay);
 
@@ -262,10 +262,6 @@ var there = {
 
   newDest: function(){
     console.log('newDest: start');
-    var latMin = 24.544090;
-    var latMax = 49.002389;
-    var longMin = -124.733056;
-    var longMax = -66.949778;
 
     var multiplier = 0.06 + multiplierAdjust;
 
@@ -275,17 +271,10 @@ var there = {
     var newLat = here.coords[0] + (Math.random() + (0.009 / 0.06)) * latMultiplier;
     var newLong = here.coords[1] + (Math.random() + (0.009 / 0.06)) * longMultiplier;
 
-    while (newLat < latMin || newLat > latMax){
-      newLat = here.coords[0] + Math.random() * latMultiplier;
-    }
-    while (newLong < longMin || newLong > longMax){
-      newLong = here.coords[1] + Math.random() * longMultiplier;
-    }
-
     there.coords = [newLat, newLong];
     console.log(there.coords);
-    // there.getRoute();
-    there.getPlaces();
+    there.getRoute();
+    // there.getPlaces();
   },
 
   getRoute: function(){
@@ -308,30 +297,17 @@ var there = {
           console.log('route: set');
           console.log(' ');
 
-          // bookmark
+          if (there.foundPhoto){
+            var timeout = there.route.duration.value * 1000;
 
-          // if (here.distance == 0){
-          //   tweet.timeout = 900000;
-          // } else {
-
-          // FIXME
-          var timeout = there.route.duration.value * 1000;
-          // var timeout = 1000;
-
-          // }
-          // tweet.timeout = 60000/2;
-          // console.log('timeout ' + tweet.timeout);
-
-          // there.getStreetView();
-          // there.getPlaces();
-          // there.tagImage(there.place);
-
-          if (shortTimeout){
-            tweet.schedule(tweet.text, there.place.localPath, shortTimeoutLength);
+            if (shortTimeout){
+              tweet.schedule(tweet.text, there.place.localPath, shortTimeoutLength);
+            } else {
+              tweet.schedule(tweet.text, there.place.localPath, timeout);
+            }
           } else {
-            tweet.schedule(tweet.text, there.place.localPath, timeout);
+            there.getPlaces();
           }
-          // tweet.updateStatus(tweet.text, there.place.localPath);
 
         } else {
           console.log('no route to destination');
@@ -343,113 +319,6 @@ var there = {
     });
   },
 
-  getStreetView: function(){
-    console.log('streetview: start');
-    there.streetView.url = 'https://maps.googleapis.com/maps/api/streetview?' +
-      'size=600x400' +
-      '&location=' + there.coords.join(',') +
-      '&fov=120' +
-      '&key=' + creds.g;
-    gurl.shorten(there.streetView.url, function(err, newUrl) {
-      there.streetView.shortUrl = newUrl;
-    });
-
-    // download(there.streetView.url, 'streetview.jpg', function(){
-    //   there.streetView.localPath = './streetview.jpg';
-    //   console.log('streetview: downloaded');
-    //   console.log(' ');
-    //   there.tagImage(there.streetView);
-    // });
-
-    webshot(
-      there.streetView.url,
-      'streetview.png',
-      {
-        shotSize: {
-          width: 600,
-          height: 378
-        }
-      },
-      function(err){
-        if (!err){
-          there.streetView.localPath = './streetview.png';
-          console.log('streetview: downloaded');
-          console.log(' ');
-          there.tagImage(there.streetView);
-        }
-      }
-    );
-  },
-
-  getPlacePhoto: function(obj){
-    console.log('place photo: start');
-    // console.log(obj);
-
-    obj.url = 'https://maps.googleapis.com/maps/api/place/photo?' +
-      'maxwidth=600' +
-      '&photoreference=' + obj.photos[0].photo_reference +
-      '&key=' + creds.g;
-
-    gurl.shorten(obj.url, function(err, newUrl) {
-      if (!err){
-        there.place.shortUrl = newUrl;
-
-        download(obj.url, 'place.jpg', function(){
-          there.place.localPath = './place.jpg';
-          console.log('place photo: downloaded');
-          there.tagImage(there.place);
-        });
-      } else {
-        console.log('google url error');
-        loopChecker();
-        there.getPlaces();
-      }
-    });
-
-
-    // webshot(
-    //   obj.url,
-    //   'place.png',
-    //   {
-    //     shotSize: {
-    //       width: cropWidth,
-    //       height: cropHeight
-    //     }
-    //   },
-    //   function(err){
-    //     if (!err){
-    //       there.place.localPath = './place.png';
-    //       console.log('place photo: downloaded');
-    //       there.tagImage(there.place);
-    //     }
-    //   }
-    // );
-  },
-
-  // getDetails: function(placeId, array){
-  //   gmap.place({placeid: placeId}, function(err, response){
-  //     if (!err){
-  //       // console.log('details: got details on ' + placeId);
-
-  //       var data = response.json.result;
-  //       if ('photos' in data){
-  //         if (!data.photos[0].html_attributions[0].includes(data.name)){
-  //           console.log(data.name + ' has photos');
-  //           there.getPlacePhoto(data.photos[0].photo_reference);
-
-  //           // there.getPlacePhoto(data.photos[0].photo_reference);
-  //           // for (var i = 0; i < data.photos.length; i++){
-  //           //   // console.log(data.photos[i].photo_reference);
-  //           //   there.getPlacePhoto(data.photos[i].photo_reference);
-
-  //           // }
-
-  //         }
-  //       }
-  //     }
-  //   })
-  // },
-
   getPlaces: function(){
     console.log('places: start');
     gmap.placesNearby({
@@ -460,12 +329,6 @@ var there = {
         var data = response.json.results;
 
         if (data.length > 0){
-          // there.getDetails(data[0].place_id);
-
-          // for (var i = 0; i < data.length; i++){
-          //   // there.getDetails(data[i].place_id);
-          //   there.places[i] = data[i];
-          // }
 
           for (var i = 0; i < data.length; i++){
             if ('photos' in data[i]){
@@ -496,6 +359,7 @@ var there = {
             console.log('no places w/ photos nearby');
 
             // start over
+            there.foundPhoto = false;
             loopChecker();
             there.newDest();
 
@@ -505,13 +369,67 @@ var there = {
           console.log(' ');
 
           // start over
+          there.foundPhoto = false;
           loopChecker();
           there.newDest();
 
         }
+      } else {
+        console.log(err);
+        console.log('places error');
       }
     });
   },
+
+  getPlacePhoto: function(obj){
+    console.log('place photo: start');
+    // console.log(obj);
+
+    obj.url = 'https://maps.googleapis.com/maps/api/place/photo?' +
+      'maxwidth=600' +
+      '&photoreference=' + obj.photos[0].photo_reference +
+      '&key=' + creds.g;
+
+    gurl.shorten(obj.url, function(err, newUrl) {
+      if (!err){
+        there.place.shortUrl = newUrl;
+
+        download(obj.url, 'place.jpg', function(){
+          there.place.localPath = './place.jpg';
+          console.log('place photo: downloaded');
+          there.tagImage(there.place);
+        });
+      } else {
+        console.log('google url error');
+        loopChecker();
+        there.getPlaces();
+      }
+    });
+  },
+
+  // getDetails: function(placeId, array){
+  //   gmap.place({placeid: placeId}, function(err, response){
+  //     if (!err){
+  //       // console.log('details: got details on ' + placeId);
+
+  //       var data = response.json.result;
+  //       if ('photos' in data){
+  //         if (!data.photos[0].html_attributions[0].includes(data.name)){
+  //           console.log(data.name + ' has photos');
+  //           there.getPlacePhoto(data.photos[0].photo_reference);
+
+  //           // there.getPlacePhoto(data.photos[0].photo_reference);
+  //           // for (var i = 0; i < data.photos.length; i++){
+  //           //   // console.log(data.photos[i].photo_reference);
+  //           //   there.getPlacePhoto(data.photos[i].photo_reference);
+
+  //           // }
+
+  //         }
+  //       }
+  //     }
+  //   })
+  // },
 
   tagImage: function(obj){
     console.log('clarifai: start');
@@ -574,7 +492,7 @@ var there = {
         }
       },
       function(err) {
-        console.log(err);
+        console.log('clarifai error');
         loopChecker();
         there.getPlaces();
       }
@@ -584,7 +502,3 @@ var there = {
 
 
 there.newDest();
-// tweet.updateHeader('./header.png');
-
-
-// wiki.query('tree');
