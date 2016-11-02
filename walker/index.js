@@ -1,6 +1,6 @@
 var post = true;
-var shortTimeout = true;
-var shortTimeoutLength = 1000 * 60;
+var shortTimeout = false;
+var shortTimeoutLength = 5000;
 
 var creds = require('./creds.js');
 var gmap = require('@google/maps').createClient({
@@ -88,62 +88,12 @@ var init = function(){
   multiplierAdjust = 0;
   radiusAdjust = 0;
 
-  if (shortTimeout){
-    setTimeout(there.newDest, shortTimeoutLength);
-    console.log('will tweet again in ' + shortTimeoutLength.toString());
-  } else {
-    setTimeout(there.newDest, tweet.timeout);
-    var timeoutReadable = [];
-    timeoutReadable[0] = Math.floor(((tweet.timeout / (1000*60*60)) % 24));
-    timeoutReadable[1] = Math.floor(((tweet.timeout / (1000*60)) % 60));
-    timeoutReadable[2] = Math.floor((tweet.timeout / 1000) % 60);
-
-    console.log('will tweet again in ' + timeoutReadable.join(':'));
-  }
-
   console.log(' ');
   console.log(' ');
   console.log(' ');
+  console.log('reinitializing');
+  there.newDest();
 };
-
-var getMap = function(){
-  console.log('trip map: start');
-
-  var url = 'https://maps.googleapis.com/maps/api/staticmap?' +
-    'size=640x640&' +
-    'scale=2&' +
-    'markers=' + here.history.coords.join('|') +
-    '&path=' + here.history.coords.join('|') +
-    '&key=' + creds.g;
-  // gurl.shorten(url, function(err, newUrl) {
-  //   url = newUrl;
-  // });
-
-    download(url, 'header.png', function(){
-      console.log('trip map: downloaded');
-      console.log(' ');
-      tweet.updateAvatar('./header.png');
-    });
-
-  // webshot(
-  //   url,
-  //   'header.png',
-  //   {
-  //     shotSize: {
-  //       width: 640,
-  //       height: 458
-  //     }
-  //   },
-  //   function(err){
-  //     if (!err){
-  //       console.log('trip map: downloaded');
-  //       console.log(' ');
-  //       tweet.updateHeader('./header.png');
-  //     }
-  //   }
-  // );
-};
-
 
 var tweet = {
   text: '',
@@ -153,9 +103,29 @@ var tweet = {
       // jsonfile.writeFile('tweetresponse.json', response, {spaces: 2}, function (err){});
       console.log('tweeted: ' + data.text);
       // here.update();
-      getMap();
       init();
     }
+  },
+
+  getMap: function(){
+    console.log('trip map: start');
+
+    var url = 'https://maps.googleapis.com/maps/api/staticmap?' +
+      'size=640x640&' +
+      'scale=2&' +
+      'markers=' + here.history.coords.join('|') +
+      '&path=' + here.history.coords.join('|') +
+      '&key=' + creds.g;
+    // gurl.shorten(url, function(err, newUrl) {
+    //   url = newUrl;
+    // });
+
+    download(url, 'header.png', function(){
+      console.log('trip map: downloaded');
+      console.log(' ');
+      tweet.updateAvatar('./header.png');
+    });
+
   },
 
   updateProfile: function(){
@@ -168,7 +138,12 @@ var tweet = {
       if (!err){
         // jsonfile.writeFile('bioresponse.json', response, {spaces: 2}, function (err){});
         console.log('bio updated');
+      } else {
+        console.log('bio update error');
       }
+
+      tweet.getMap();
+
     });
   },
 
@@ -203,16 +178,14 @@ var tweet = {
         console.log('avatar updated');
       } else {
         console.log('avatar error');
-
       }
+
     });
   },
 
-
-  FIXME
   schedule: function(text, image, delay){
     
-    var updateStatus = function(text, image){
+    var updateStatus = function(){
       console.log('tweet: start');
       if (image){
         console.log(image);
@@ -238,6 +211,7 @@ var tweet = {
         });
 
       } else {
+        console.log('false');
 
         var params = {
           status: text,
@@ -252,6 +226,14 @@ var tweet = {
     };
 
     setTimeout(updateStatus, delay);
+
+    var timeoutReadable = [];
+    timeoutReadable[0] = Math.floor(((delay / (1000*60*60)) % 24));
+    timeoutReadable[1] = Math.floor(((delay / (1000*60)) % 60));
+    timeoutReadable[2] = Math.floor((delay / 1000) % 60);
+
+    console.log('will tweet in ' + timeoutReadable.join(':'));
+
   },
 };
 
@@ -332,8 +314,8 @@ var there = {
           // } else {
 
           // FIXME
-          // var timeout = there.route.duration.value * 1000;
-          var timeout = 10000;
+          var timeout = there.route.duration.value * 1000;
+          // var timeout = 1000;
 
           // }
           // tweet.timeout = 60000/2;
@@ -343,15 +325,12 @@ var there = {
           // there.getPlaces();
           // there.tagImage(there.place);
 
-          tweet.schedule(tweet.text, there.place.localPath, timeout);
+          if (shortTimeout){
+            tweet.schedule(tweet.text, there.place.localPath, shortTimeoutLength);
+          } else {
+            tweet.schedule(tweet.text, there.place.localPath, timeout);
+          }
           // tweet.updateStatus(tweet.text, there.place.localPath);
-
-          var timeoutReadable = [];
-          timeoutReadable[0] = Math.floor(((timeout / (1000*60*60)) % 24));
-          timeoutReadable[1] = Math.floor(((timeout / (1000*60)) % 60));
-          timeoutReadable[2] = Math.floor((timeout / 1000) % 60);
-
-          console.log('will tweet in ' + timeoutReadable.join(':'));
 
         } else {
           console.log('no route to destination');
@@ -578,6 +557,7 @@ var there = {
             console.log('clarifai: illustration');
             here.history.places.push(there.place.id);
 
+            loopChecker();
             there.getPlaces();
           }
           console.log(' ');
