@@ -102,7 +102,7 @@ var tweet = {
       console.log('tweeted: ' + data.text);
       init();
     } else {
-      console.log('tweet error')
+      console.log('tweet error');
     }
   },
 
@@ -202,6 +202,9 @@ var tweet = {
                 display_coordinates: true,
                 media_ids: [mediaIdStr]
               };
+
+              console.log('tweet params');
+              console.log(params);
 
               T.post('statuses/update', params, tweet.tweeted);
             }
