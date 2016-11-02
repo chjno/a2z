@@ -71,9 +71,14 @@ var init = function(){
   tweet.updateProfile();
 
 
-  fs.writeFile('./here.js', 'module.exports = ' + util.inspect(here, {depth: null}),
-    function(err){
-
+  // fs.writeFile('./here.js', 'module.exports = ' + util.inspect(here, {depth: null}),
+  var json = JSON.stringify(here, null, 2);
+  fs.writeFile('./here.js', 'module.exports = ' + json, function (err){
+      if (!err){
+        console.log('here.js written');
+      } else {
+        console.log('here.js write error');
+      }
     }
   );
 
@@ -146,24 +151,22 @@ var tweet = {
     });
   },
 
-  updateHeader: function(image){
-    var b64content = fs.readFileSync(image, { encoding: 'base64' });
-    var params = {
-      banner: b64content,
-      width: 1280,
-      height: 400
-    };
-    T.post('account/update_profile_banner', params, function (err, data, response){
-      if (!err){
-        jsonfile.writeFile('headerresponse.json', response, {spaces: 2}, function (err){});
-        console.log('header response written to file');
-        console.log('header updated');
-      } else {
-        jsonfile.writeFile('headererr.json', response, {spaces: 2}, function (err){});
+  // updateHeader: function(image){
+  //   var b64content = fs.readFileSync(image, { encoding: 'base64' });
+  //   var params = {
+  //     banner: b64content,
+  //     width: 1280,
+  //     height: 400
+  //   };
+  //   T.post('account/update_profile_banner', params, function (err, data, response){
+  //     if (!err){
+  //       console.log('header response written to file');
+  //       console.log('header updated');
+  //     } else {
 
-      }
-    });
-  },
+  //     }
+  //   });
+  // },
 
   updateAvatar: function(image){
     console.log('updating avatar');
