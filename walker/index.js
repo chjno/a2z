@@ -146,12 +146,7 @@ var getMap = function(){
 
 
 var tweet = {
-  first: true,
-  timeout: 0,
-
-  genText: function(){
-
-  },
+  text: '',
 
   tweeted: function(err, data, response){
     if (!err){
@@ -213,44 +208,51 @@ var tweet = {
     });
   },
 
-  updateStatus: function(text, image){
-    console.log('tweet: start');
-    if (image){
 
-      var b64content = fs.readFileSync(image, { encoding: 'base64' });
-      T.post('media/upload', { media_data: b64content }, function (err, data, response) {
-        // jsonfile.writeFile('mediaresponse.json', response, {spaces: 2}, function (err){});
-        var mediaIdStr = data.media_id_string;
-        var meta_params = { media_id: mediaIdStr};
+  FIXME
+  schedule: function(text, image, delay){
+    
+    var updateStatus = function(text, image){
+      console.log('tweet: start');
+      if (image){
+        console.log(image);
+        var b64content = fs.readFileSync(image, { encoding: 'base64' });
+        T.post('media/upload', { media_data: b64content }, function (err, data, response) {
+          // jsonfile.writeFile('mediaresponse.json', response, {spaces: 2}, function (err){});
+          var mediaIdStr = data.media_id_string;
+          var meta_params = { media_id: mediaIdStr};
 
-        T.post('media/metadata/create', meta_params, function (err, data, response) {
-          if (!err) {
-            var params = {
-              status: text,
-              lat: there.coords[0],
-              long: there.coords[1],
-              display_coordinates: true,
-              media_ids: [mediaIdStr]
-            };
+          T.post('media/metadata/create', meta_params, function (err, data, response) {
+            if (!err) {
+              var params = {
+                status: text,
+                lat: there.coords[0],
+                long: there.coords[1],
+                display_coordinates: true,
+                media_ids: [mediaIdStr]
+              };
 
-            T.post('statuses/update', params, tweet.tweeted);
-          }
+              T.post('statuses/update', params, tweet.tweeted);
+            }
+          });
         });
-      });
 
-    } else {
+      } else {
 
-      var params = {
-        status: text,
-        lat: there.coords[0],
-        long: there.coords[1],
-        display_coordinates: true
-      };
+        var params = {
+          status: text,
+          lat: there.coords[0],
+          long: there.coords[1],
+          display_coordinates: true
+        };
 
-      T.post('statuses/update', params, tweet.tweeted);
-    }
+        T.post('statuses/update', params, tweet.tweeted);
+      }
 
-  }
+    };
+
+    setTimeout(updateStatus, delay);
+  },
 };
 
 // var here = {
@@ -299,7 +301,8 @@ var there = {
 
     there.coords = [newLat, newLong];
     console.log(there.coords);
-    there.getRoute();
+    // there.getRoute();
+    there.getPlaces();
   },
 
   getRoute: function(){
@@ -320,22 +323,35 @@ var there = {
           there.route.endAddress = data.legs[0].end_address;
           there.route.endCoords = data.legs[0].end_location;
           console.log('route: set');
+          console.log(' ');
 
           // bookmark
 
           // if (here.distance == 0){
           //   tweet.timeout = 900000;
           // } else {
-            tweet.timeout = there.route.duration.value * 1000;
+
+          // FIXME
+          // var timeout = there.route.duration.value * 1000;
+          var timeout = 10000;
+
           // }
           // tweet.timeout = 60000/2;
           // console.log('timeout ' + tweet.timeout);
-          console.log(' ');
 
-
-          there.getStreetView();
+          // there.getStreetView();
           // there.getPlaces();
+          // there.tagImage(there.place);
 
+          tweet.schedule(tweet.text, there.place.localPath, timeout);
+          // tweet.updateStatus(tweet.text, there.place.localPath);
+
+          var timeoutReadable = [];
+          timeoutReadable[0] = Math.floor(((timeout / (1000*60*60)) % 24));
+          timeoutReadable[1] = Math.floor(((timeout / (1000*60)) % 60));
+          timeoutReadable[2] = Math.floor((timeout / 1000) % 60);
+
+          console.log('will tweet in ' + timeoutReadable.join(':'));
 
         } else {
           console.log('no route to destination');
@@ -389,29 +405,27 @@ var there = {
     console.log('place photo: start');
     // console.log(obj);
 
-    var cropWidth = 600;
-    var cropHeight;
-    if (obj.photos[0].width < 600){
-      cropWidth = obj.photos[0].width;
-      cropHeight = obj.photos[0].height;
-    } else {
-      cropHeight = 600 * obj.photos[0].height / obj.photos[0].width;
-    }
-
     obj.url = 'https://maps.googleapis.com/maps/api/place/photo?' +
       'maxwidth=600' +
       '&photoreference=' + obj.photos[0].photo_reference +
       '&key=' + creds.g;
 
     gurl.shorten(obj.url, function(err, newUrl) {
-      there.place.shortUrl = newUrl;
+      if (!err){
+        there.place.shortUrl = newUrl;
+
+        download(obj.url, 'place.jpg', function(){
+          there.place.localPath = './place.jpg';
+          console.log('place photo: downloaded');
+          there.tagImage(there.place);
+        });
+      } else {
+        console.log('google url error');
+        loopChecker();
+        there.getPlaces();
+      }
     });
 
-    download(obj.url, 'place.jpg', function(){
-      there.place.localPath = './place.jpg';
-      console.log('place photo: downloaded');
-      there.tagImage(there.place);
-    });
 
     // webshot(
     //   obj.url,
@@ -484,7 +498,6 @@ var there = {
                   there.place.id = data[i].place_id;
                   there.place.types = data[i].types;
                   there.place.vicinity = data[i].vicinity;
-                  console.log('places: found unique photo');
                   console.log(' ');
                   there.foundPhoto = true;
                   break;
@@ -494,8 +507,11 @@ var there = {
           }
 
           if (there.foundPhoto){
-            console.log('found photo getting route');
-            there.getRoute();
+            // console.log('found photo getting route');
+            // there.getRoute();
+            console.log('places: found photo');
+            console.log('');
+            there.getPlacePhoto(there.place);
           } else {
             console.log('no places w/ photos nearby');
 
@@ -524,138 +540,62 @@ var there = {
         var data = response.data.outputs[0].data.concepts;
         if (data.length > 0){
 
-          var postText;
-          if (obj == there.streetView){
-            var badTagCount = 0;
-            var badTags = [
-              "illustration",
-              "vector",
-              "pattern",
-              "wallpaper",
-              "art",
-              "abstract",
-              "square",
-              "horizontal",
-              "no person",
-              "vertical",
-              "simplicity",
-              "design",
-              "decoration",
-              "ornate",
-              "background",
-              "people",
-              "old",
-              "shape",
-              "graphic",
-              "empty"
-            ];
+          obj.tags = [];
+          var badTags = [
+            'horizontal',
+            'horizontal plane'
+          ];
 
-            obj.tags = [];
-            for (var i = 0; i < data.length; i++){
-              if (badTags.indexOf(data[i].name) != -1){
-                badTagCount++;
-              }
-              obj.tags[i] = [];
-              obj.tags[i][0] = data[i].name;
-              obj.tags[i][1] = data[i].value;
+          for (var k = 0; k < data.length; k++){
+            if (badTags.indexOf(data[k].name) == -1){
+              console.log(data[k].name);
+              obj.tags.push(data[k].name);
             }
+          }
 
-            if (badTagCount > 9){
-              if (!there.foundPhoto){
-                console.log('clarifai: no street image 1');
-                console.log(' ');
-                there.getPlaces();
-              } else {
-                console.log('clarifai: no street image 2');
-                console.log(' ');
-                there.getPlacePhoto(there.place);
-              }
+          // if not an illustration
+          if (obj.tags.indexOf('illustration') == -1){
+
+            tweet.text = obj.tags[Math.floor(Math.random() * obj.tags.length)];
+
+            if (post){
+
+              there.getRoute();
             } else {
-              postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
-              // while (postText == 'horizontal plane'){
-              while (postText.indexOf('horizontal') != -1){
-                postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
-              }
 
-              // if (obj.tags[0][0] == 'horizontal plane'){
-              //   postText = obj.tags[1][0];
-              // }
-
-              if (post){
-                console.log('');
-                for (var j = 0; j < obj.tags.length; j++){
-                  console.log(obj.tags[j][0]);
-                }
-                console.log('');
-                tweet.updateStatus(postText, obj.localPath);
-              } else {
-                console.log('');
-                console.log('tweet');
-                console.log(there.coords);
-                console.log(postText);
-                console.log(obj.localPath);
-              }
+              // for testing: if (post == false)
+              console.log('');
+              console.log('tweet');
+              console.log(there.coords);
+              console.log(tweet.text);
+              console.log(obj.localPath);
             }
+
+          // else if illustration
           } else {
-            obj.tags = [];
-            for (var k = 0; k < data.length; k++){
-              obj.tags[k] = [];
-              obj.tags[k][0] = data[k].name;
-              obj.tags[k][1] = data[k].value;
-            }
 
-            // if not an illustration
-            if (obj.tags.indexOf('illustration') == -1){
-              postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
-              // while (postText == 'horizontal plane'){
-              while (postText.indexOf('horizontal') != -1){
-                postText = obj.tags[Math.floor(Math.random() * obj.tags.length)][0];
-              }
+            // if illustration in place's tags
+            console.log('clarifai: illustration');
+            here.history.places.push(there.place.id);
 
-              // if (obj.tags[0][0] == 'horizontal plane'){
-              //   postText = obj.tags[1][0];
-              // }
-
-              if (post){
-
-                // tweet place
-                console.log('');
-                for (var l = 0; l < obj.tags.length; l++){
-                  console.log(obj.tags[l][0]);
-                }
-                console.log('');
-                tweet.updateStatus(postText, obj.localPath);
-              } else {
-
-                // for testing: if (post == false)
-                console.log('');
-                console.log('tweet');
-                console.log(there.coords);
-                console.log(postText);
-                console.log(obj.localPath);
-              }
-            } else {
-
-              // if illustration in place's tags
-              console.log('clarifai: illustration');
-              console.log(' ');
-              here.history.places.push(there.place.id);
-              there.getPlaces();
-            }
+            there.getPlaces();
           }
           console.log(' ');
         } else {
 
+          console.log('clarifai no tags returned');
+          console.log(' ');
+          here.history.places.push(there.place.id);
 
-          // clarifai broken?
-          // start over
           loopChecker();
-          there.newDest();
+          there.getPlaces();
 
         }
       },
       function(err) {
         console.log(err);
+        loopChecker();
+        there.getPlaces();
       }
     );
   }
