@@ -1,3 +1,5 @@
+var jimp = require('jimp');
+
 var fs = require('fs');
 var creds = require('./creds.js');
 var twit = require('twit');
@@ -129,7 +131,7 @@ var updateProfileImage = function(image){
 };
 
 
-uploadBanner('./header.png');
+// uploadBanner('./header.png');
 // uploadBanner('./header-small.png');
 // getBanner(me);
 // getUser(me);
@@ -137,3 +139,9 @@ uploadBanner('./header.png');
 // getTweets(me);
 // updateStatus('hi', './header-small.png');
 // updateProfileImage('./header.png');
+
+jimp.read('header.png', function(err, image){
+  if (err) throw err;
+  var raw = image.bitmap.data;
+  console.log(raw);
+});
