@@ -206,9 +206,6 @@ var tweet = {
                 media_ids: [mediaIdStr]
               };
 
-              console.log('tweet params');
-              console.log(params);
-
               T.post('statuses/update', params, tweet.tweeted);
             }
           });
@@ -304,6 +301,11 @@ var there = {
           console.log(' ');
 
           if (there.foundPhoto){
+
+            console.log('status: ' + tweet.text);
+            console.log('there: ' + there.coords);
+            console.log('');
+            
             var timeout = there.route.duration.value * 1000;
 
             if (shortTimeout){
