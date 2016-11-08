@@ -1,0 +1,12 @@
+npm body-parser
+  parse body of http requests
+
+npm async
+  waterfall
+
+npm cors
+
+databases
+  couchdb
+  mongodb
+  firebase
